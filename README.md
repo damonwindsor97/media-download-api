@@ -3,7 +3,7 @@
 
 ## Uses
 <ul>
-    <li>Convert & download YouTube videos to MP4 via its URL (ONLY 360p for now)</li>
+    <li>Convert & download YouTube videos to MP4 via its URL (Highest available quality)</li>
     <li>Convert & download YouTube videos to MP3 via its URL</li>
 </ul>
 
