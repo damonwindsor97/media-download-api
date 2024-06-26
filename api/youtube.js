@@ -107,30 +107,30 @@ router.route('/downloadMp3').post(async (req, res) => {
         const videoUrl = req.body.link;
 
         if(!ytdl.validateURL(videoUrl))
-            return res.status(500).send("Invalid URL")
+            return res.status(500).send("Invalid YouTube URL")
     
-        const options = {
-            quality: "highestaudio",
-            filter: "audio"
-        };
-
         const info = await ytdl.getInfo(videoUrl)
-        console.log(info)
-
         const title = info.videoDetails.title;
+        console.log(`Video successfully obtained: ${title}`)
 
-        const videoPath = path.join(process.cwd(), "temp", `${encodeURI(title)}.mp4`) 
-        console.log(videoPath)
+        const formats = ytdl.filterFormats(info.formats, 'audioonly');
+        const mp4Format = formats.find(format => format.container === 'mp4');
 
-        const videoWriteStream = fs.createWriteStream(videoPath);
-        ytdl(videoUrl, options).pipe(videoWriteStream);
+        if (!mp4Format) {
+            return res.status(400).send("No MP4 format for the provided video")
+        }
 
-        videoWriteStream.on('finish', () => {
-            res.download(videoPath, `${title}.mp3`, () => {
-                fs.unlinkSync(videoPath)
-            })
+        const audioStream = ytdl.downloadFromInfo(info, {
+            format: mp4Format
+        });
+
+        res.set({
+            'Content-Disposition': `attachment; filename="audio.m4a"`, // Change file extension to .m4a for MP4 audio
+            'Content-Type': 'audio/mp4', // Set content type to audio/mp4 for M4A format
         })
-        
+
+        audioStream.pipe(res)
+        console.log(`File successfully converted: ${title}`)
     } catch (error) {
         console.log(error)
         res.status(500).send("Internal Server Error - please contact an admin")

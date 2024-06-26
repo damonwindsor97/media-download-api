@@ -24,6 +24,9 @@ if (!fs.existsSync(tempDir)) {
 const youtubeRoutes = require("./api/youtube.js");
 app.use("/youtube", youtubeRoutes);
 
+const soundcloudRoutes = require('./api/soundcloud.js')
+app.use("/soundcloud", soundcloudRoutes)
+
 const port = process.env.PORT || 5000;
 app.listen(port, function () {
     console.log(`Server started on port: ${port}`);
