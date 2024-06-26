@@ -113,24 +113,34 @@ router.route('/downloadMp3').post(async (req, res) => {
         const title = info.videoDetails.title;
         console.log(`Video successfully obtained: ${title}`)
 
-        const formats = ytdl.filterFormats(info.formats, 'audioonly');
+        const formats = ytdl.filterFormats(info.formats || [], 'audioonly');
+        
+        if (formats.length === 0) {
+            return res.status(400).send("No audio formats found for the provided video");
+        }
+
         const mp4Format = formats.find(format => format.container === 'mp4');
 
         if (!mp4Format) {
-            return res.status(400).send("No MP4 format for the provided video")
+            return res.status(400).send("No MP4 format for the provided video");
         }
 
-        const audioStream = ytdl.downloadFromInfo(info, {
-            format: mp4Format
-        });
+        const audioPath = path.join(process.cwd(), "temp", `${encodeURI(title)}.mp4`);
+        const audioWriteStream = fs.createWriteStream(audioPath);
+
+        ytdl(videoUrl, { format: mp4Format }).pipe(audioWriteStream);
 
         res.set({
             'Content-Disposition': `attachment; filename="audio.m4a"`, // Change file extension to .m4a for MP4 audio
             'Content-Type': 'audio/mp4', // Set content type to audio/mp4 for M4A format
         })
 
-        audioStream.pipe(res)
-        console.log(`File successfully converted: ${title}`)
+        audioWriteStream.on('finish', () => {
+            res.download(audioPath, `${title}.mp3`, () => {
+                fs.unlinkSync(audioPath)
+            })
+        })
+
     } catch (error) {
         console.log(error)
         res.status(500).send("Internal Server Error - please contact an admin")
