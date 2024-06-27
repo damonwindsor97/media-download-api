@@ -38,7 +38,7 @@ router.route('/downloadMp4').post(async (req, res) => {
         
         const info = await ytdl.getInfo(videoUrl); // query video to get info
         const title = info.videoDetails.title; // save title of the video
-        console.log(`Video successfully obtained: ${title}`)
+        console.log(`[MP4] Video successfully obtained: ${title}`)
         
         const tempDir = path.join(process.cwd(), "temp"); // Custom temporary directory
         const ffmpegPath = path.join(tempDir, `${title}${Date.now()}.mp4`); // Path for the temporary output file, video name + current date
@@ -65,7 +65,7 @@ router.route('/downloadMp4').post(async (req, res) => {
 
         // Callback to check if ffmpegProcess is finished, otherwise display an error
         ffmpegProcess.on('close', () => {
-            console.log(`Video successfully converted: ${title}`);
+            console.log(`[MP4] Video successfully converted: ${title}`);
 
             // After ffmpegProcess is finished, send the file to the client
             res.download(ffmpegPath, `${title}${Date.now()}.mp4`, () => {
@@ -81,8 +81,8 @@ router.route('/downloadMp4').post(async (req, res) => {
         });
 
         // Error handling for ffmpeg process
-        ffmpegProcess.on('error', (err) => {
-            console.error('ffmpegProcess error:', err);
+        ffmpegProcess.on('error', (error) => {
+            console.error('ffmpegProcess error:', error);
             res.status(500).send('Internal server error during video processing');
         });
 
@@ -112,7 +112,7 @@ router.route('/downloadMp3').post(async (req, res) => {
     
         const info = await ytdl.getInfo(videoUrl)
         const title = info.videoDetails.title;
-        console.log(`Video successfully obtained: ${title}`)
+        console.log(`[MP3] Video successfully obtained: ${title}`)
 
         const formats = ytdl.filterFormats(info.formats || [], 'audioonly');
         
@@ -137,7 +137,7 @@ router.route('/downloadMp3').post(async (req, res) => {
         });
 
         audioWriteStream.on('finish', () => {
-            console.log(`Video successfully converted: ${title}`);
+            console.log(`[MP3] Video successfully converted: ${title}`);
             res.download(audioPath, `${title}.mp3`, (error) => {
                 if (error) {
                     console.log(error);
