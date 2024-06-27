@@ -38,6 +38,7 @@ router.route('/downloadMp4').post(async (req, res) => {
         
         const info = await ytdl.getInfo(videoUrl); // query video to get info
         const title = info.videoDetails.title; // save title of the video
+        console.log(`Video successfully obtained: ${title}`)
         
         const tempDir = path.join(process.cwd(), "temp"); // Custom temporary directory
         const ffmpegPath = path.join(tempDir, `${title}${Date.now()}.mp4`); // Path for the temporary output file, video name + current date
@@ -64,7 +65,7 @@ router.route('/downloadMp4').post(async (req, res) => {
 
         // Callback to check if ffmpegProcess is finished, otherwise display an error
         ffmpegProcess.on('close', () => {
-            console.log('ffmpegProcess finished');
+            console.log(`Video successfully converted: ${title}`);
 
             // After ffmpegProcess is finished, send the file to the client
             res.download(ffmpegPath, `${title}${Date.now()}.mp4`, () => {
@@ -131,9 +132,9 @@ router.route('/downloadMp3').post(async (req, res) => {
         ytdl(videoUrl, { format: mp4Format }).pipe(audioWriteStream);
 
         res.set({
-            'Content-Disposition': `attachment; filename="audio.m4a"`, // Change file extension to .m4a for MP4 audio
-            'Content-Type': 'audio/mp4', // Set content type to audio/mp4 for M4A format
-        })
+            'Content-Disposition': `attachment; filename="${title}.m4a"`, // Change filename extension to .mp3
+            'Content-Type': 'audio/mp4', // Set content type to audio/mpeg for MP3 format
+        });
 
         audioWriteStream.on('finish', () => {
             console.log(`Video successfully converted: ${title}`);
@@ -142,7 +143,8 @@ router.route('/downloadMp3').post(async (req, res) => {
                     console.log(err);
                     res.status(500).send("Error downloading file");
                 } else {
-                    fs.unlinkSync(audioPath); // Clean up the temporary file
+                    fs.unlinkSync(audioPath);
+                    console.log(`File successfully deleted: ${audioPath}`)
                 }
             });
         });
