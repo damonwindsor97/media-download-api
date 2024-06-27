@@ -138,9 +138,9 @@ router.route('/downloadMp3').post(async (req, res) => {
 
         audioWriteStream.on('finish', () => {
             console.log(`Video successfully converted: ${title}`);
-            res.download(audioPath, `${title}.mp3`, (err) => {
-                if (err) {
-                    console.log(err);
+            res.download(audioPath, `${title}.mp3`, (error) => {
+                if (error) {
+                    console.log(error);
                     res.status(500).send("Error downloading file");
                 } else {
                     fs.unlinkSync(audioPath);
