@@ -136,10 +136,16 @@ router.route('/downloadMp3').post(async (req, res) => {
         })
 
         audioWriteStream.on('finish', () => {
-            res.download(audioPath, `${title}.mp3`, () => {
-                fs.unlinkSync(audioPath)
-            })
-        })
+            console.log(`Video successfully converted: ${title}`);
+            res.download(audioPath, `${title}.mp3`, (err) => {
+                if (err) {
+                    console.log(err);
+                    res.status(500).send("Error downloading file");
+                } else {
+                    fs.unlinkSync(audioPath); // Clean up the temporary file
+                }
+            });
+        });
 
     } catch (error) {
         console.log(error)
