@@ -65,6 +65,10 @@ router.route('/downloadMp4').post(async (req, res) => {
         ytdl(videoUrl, { quality: 'highestaudio' }).pipe(ffmpegProcess.stdio[4]);
         ytdl(videoUrl, { quality: 'highestvideo' }).pipe(ffmpegProcess.stdio[5]);
 
+        res.set({
+            'Content-Disposition': `attachment; filename="${title}.mp4"`,
+            'Content-Type': 'video/mp4', // Ensure correct content type
+        });
         // Callback to check if ffmpegProcess is finished, otherwise display an error
         ffmpegProcess.on('close', () => {
             console.log(`[MP4] Video successfully converted: ${title}`);
