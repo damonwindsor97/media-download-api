@@ -33,19 +33,22 @@ router.route('/downloadMp4').post(async (req, res) => {
     try {
         const videoUrl = req.body.link;
 
-        // Validation, just checking to see if the URL is valid
+        // Validate YouTube URL
         if (!ytdl.validateURL(videoUrl)) {
             return res.status(500).send('Invalid YouTube URL');
         }
-        
-        const info = await ytdl.getInfo(videoUrl); // query video to get info
-        const title = info.videoDetails.title; // save title of the video
-        console.log(`[MP4] Video successfully obtained: ${title}`)
-        
-        const tempDir = path.join(process.cwd(), "temp"); // Custom temporary directory
-        const ffmpegPath = path.join(tempDir, `${title}${Date.now()}.mp4`); // Path for the temporary output file, video name + current date
 
-        // Start the ffmpeg child process
+        // Get video info
+        const info = await ytdl.getInfo(videoUrl);
+        const title = info.videoDetails.title;
+
+        console.log(`[MP4] Video successfully obtained: ${title}`);
+
+        // Prepare paths
+        const tempDir = path.join(process.cwd(), 'temp');
+        const ffmpegPath = path.join(tempDir, `${title}${Date.now()}.mp4`);
+
+        // Start ffmpeg process
         const ffmpegProcess = cp.spawn(ffmpeg, [
             '-loglevel', '8', '-hide_banner',
             '-progress', 'pipe:3',
@@ -54,57 +57,57 @@ router.route('/downloadMp4').post(async (req, res) => {
             '-map', '0:a',
             '-map', '1:v',
             '-c:v', 'copy',
-            // Provide ffmpegPath as the output file name
-            ffmpegPath, 
+            ffmpegPath,
         ], {
             windowsHide: true,
             stdio: ['inherit', 'inherit', 'inherit', 'pipe', 'pipe', 'pipe'],
         });
 
-        // Pipe streams from ytdl directly into ffmpegProcess - grabbing audio + video from YouTube and putting into FFmpeg process
+        // Pipe video/audio streams into ffmpeg process
         ytdl(videoUrl, { quality: 'highestaudio' }).pipe(ffmpegProcess.stdio[4]);
         ytdl(videoUrl, { quality: 'highestvideo' }).pipe(ffmpegProcess.stdio[5]);
 
-        res.set({
-            'Content-Disposition': `attachment; filename="${title}.mp4"`,
-            'Content-Type': 'video/mp4', // Ensure correct content type
-        });
-        // Callback to check if ffmpegProcess is finished, otherwise display an error
+        // Listen for ffmpeg process close event
         ffmpegProcess.on('close', () => {
             console.log(`[MP4] Video successfully converted: ${title}`);
-
+        
             // After ffmpegProcess is finished, send the file to the client
-            res.download(ffmpegPath, `${title}${Date.now()}.mp4`, () => {
-                // Delete the temp video file once it is downloaded
-                fs.unlink(ffmpegPath, (err) => {
-                    if (err) {
-                        console.error('Error deleting file:', err);
-                    } else {
-                        console.log('File Deleted:', ffmpegPath);
-                    }
-                });
+            res.download(ffmpegPath, `${title}.mp4`, (err) => {
+                if (err) {
+                    console.error('Download error:', err);
+                    res.status(500).send('Error downloading file');
+                } else {
+                    // Delete the temp video file after successful download
+                    fs.unlink(ffmpegPath, (unlinkErr) => {
+                        if (unlinkErr) {
+                            console.error('Error deleting file:', unlinkErr);
+                        } else {
+                            console.log('File deleted:', ffmpegPath);
+                        }
+                    });
+                }
             });
         });
 
-        // Error handling for ffmpeg process
+        // Handle ffmpeg process errors
         ffmpegProcess.on('error', (error) => {
             console.error('ffmpegProcess error:', error);
             res.status(500).send('Internal server error during video processing');
         });
 
-        // Link streams - Listens for data events from the ffmpeg process's stdout stream
+        // Listen for data events from ffmpeg process stdout stream
         ffmpegProcess.stdio[3].on('data', chunk => {
-            // Parse the param=value list returned by ffmpeg
+            // Parse ffmpeg output if needed
             const lines = chunk.toString().trim().split('\n');
             const args = {};
-            for (const l of lines) {
-                const [key, value] = l.split('=');
+            for (const line of lines) {
+                const [key, value] = line.split('=');
                 args[key.trim()] = value.trim();
             }
         });
 
     } catch (error) {
-        console.log(error);
+        console.error('Server-side error:', error);
         res.status(500).send('Internal server error - please contact an admin');
     }
 });
