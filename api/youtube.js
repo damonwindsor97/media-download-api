@@ -5,11 +5,13 @@ const fs = require('fs')
 const path = require('path')
 const cp = require('child_process')
 
-const ytdl = require('ytdl-core')
+// We are using a variant of ytdl-core that has quick fixes before the main repo implements them
+// Once change is made to main repo, we can then install and replace ytdl-core where the @distube is instead 
+const ytdl = require('@distube/ytdl-core')
+
 const ffmpeg = require('ffmpeg-static');
 
 // Route base/youtubeMp4
-
 router.route('/getTitle').post(async (req, res) => {
 
     try {
