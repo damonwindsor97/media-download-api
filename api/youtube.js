@@ -112,8 +112,6 @@ router.route('/downloadMp4').post(async (req, res) => {
     }
 });
 
-
-
 router.route('/downloadMp3').post(async (req, res) => {    
     try {
         const videoUrl = req.body.link;
@@ -143,8 +141,8 @@ router.route('/downloadMp3').post(async (req, res) => {
         ytdl(videoUrl, { format: mp4Format }).pipe(audioWriteStream);
 
         res.set({
-            'Content-Disposition': `attachment; filename="${title}.m4a"`, // Change filename extension to .mp3
-            'Content-Type': 'audio/mp4', // Set content type to audio/mpeg for MP3 format
+            'Content-Disposition': `attachment; filename="${title}.m4a"`, // Change filename extension to .mp3 | m4a so MacOS likes it
+            'Content-Type': 'audio/mp4',
         });
 
         audioWriteStream.on('finish', () => {
