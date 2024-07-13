@@ -17,7 +17,7 @@ router.route('/getTitle').post(async (req, res) => {
         res.send(title);
     } catch (error) {
         console.error(error);
-        res.status(500).send("Error getting title");
+        res.status(500).send("[SC] Error getting title");
     }
 })
 
@@ -30,7 +30,7 @@ router.route('/getInfo').post(async (req, res) => {
         res.send(info);
     } catch (error) {
         console.error(error);
-        res.status(500).send("Error getting info");
+        res.status(500).send("[SC] Error getting info");
     }
 });
 
@@ -61,7 +61,7 @@ router.route('/downloadMp3').post(async (req, res) => {
                 } else {
                     console.log(`[SC] Audio converted: ${title}`);
                     fs.unlinkSync(audioPath);
-                    console.log(`File successfully deleted: ${audioPath}`)
+                    console.log(`[SC] File successfully deleted: ${audioPath}`)
                 }
             });
         });

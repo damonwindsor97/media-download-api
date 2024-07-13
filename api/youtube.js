@@ -74,15 +74,15 @@ router.route('/downloadMp4').post(async (req, res) => {
             // After ffmpegProcess is finished, send the file to the client
             res.download(ffmpegPath, `${title}.mp4`, (err) => {
                 if (err) {
-                    console.error('Download error:', err);
+                    console.error('[MP4] Download error:', err);
                     res.status(500).send('Error downloading file');
                 } else {
                     // Delete the temp video file after successful download
                     fs.unlink(ffmpegPath, (unlinkErr) => {
                         if (unlinkErr) {
-                            console.error('Error deleting file:', unlinkErr);
+                            console.error('[MP4] Error deleting file:', unlinkErr);
                         } else {
-                            console.log('File deleted:', ffmpegPath);
+                            console.log('[MP4] File deleted:', ffmpegPath);
                         }
                     });
                 }
@@ -91,7 +91,7 @@ router.route('/downloadMp4').post(async (req, res) => {
 
         // Handle ffmpeg process errors
         ffmpegProcess.on('error', (error) => {
-            console.error('ffmpegProcess error:', error);
+            console.error('[MP4] ffmpegProcess error:', error);
             res.status(500).send('Internal server error during video processing');
         });
 
@@ -107,8 +107,8 @@ router.route('/downloadMp4').post(async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Server-side error:', error);
-        res.status(500).send('Internal server error - please contact an admin');
+        console.error('[MP4] Server-side error:', error);
+        res.status(500).send('Internal server error - contact an admin');
     }
 });
 
@@ -153,14 +153,14 @@ router.route('/downloadMp3').post(async (req, res) => {
                     res.status(500).send("Error downloading file");
                 } else {
                     fs.unlinkSync(audioPath);
-                    console.log(`File successfully deleted: ${audioPath}`)
+                    console.log(`[MP3] File successfully deleted: ${audioPath}`)
                 }
             });
         });
 
     } catch (error) {
         console.log(error)
-        res.status(500).send("Internal Server Error - please contact an admin")
+        res.status(500).send("Internal Server Error - contact an admin")
     }
 })
 
