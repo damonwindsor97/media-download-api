@@ -15,7 +15,6 @@ router.route('/getTitle').post(async (req, res) => {
         const title = info.title;
 
         res.send(title);
-        console.log(title);
     } catch (error) {
         console.error(error);
         res.status(500).send("Error getting title");
@@ -29,7 +28,6 @@ router.route('/getInfo').post(async (req, res) => {
         const info = await scdl.getInfo(soundcloudUrl, CLIENT_ID);
 
         res.send(info);
-        console.log(info);
     } catch (error) {
         console.error(error);
         res.status(500).send("Error getting info");
@@ -46,7 +44,12 @@ router.route('/downloadMp3').post(async (req, res) => {
 
         const audioPath = path.join(process.cwd(), "temp", `${title}.mp3`);
 
-        const audioWriteStream = await scdl.download(soundcloudUrl).then(stream => stream.pipe(fs.createWriteStream(audioPath)))
+        const audioWriteStream = await scdl.download(soundcloudUrl, CLIENT_ID).then(stream => stream.pipe(fs.createWriteStream(audioPath)))
+
+        res.set({
+            'Content-Disposition': `attachment; filename="${title}.m4a"`, // Change filename extension to .mp3 | m4a so MacOS likes it
+            'Content-Type': 'audio/mp3',
+        });
 
         audioWriteStream.on('finish', () => {
             console.log(`[SC] Audio converting: ${title}`);
@@ -56,6 +59,7 @@ router.route('/downloadMp3').post(async (req, res) => {
                     console.log(error);
                     res.status(500).send("Error downloading file");
                 } else {
+                    console.log(`[SC] Audio converted: ${title}`);
                     fs.unlinkSync(audioPath);
                     console.log(`File successfully deleted: ${audioPath}`)
                 }
