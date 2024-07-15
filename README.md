@@ -1,10 +1,11 @@
 # media-download-api
-<p>A JavaScript API i intitially created for YT > MP4</p>
+<p>A JavaScript API i intitially created for YT > MP4 for my link utility website</p>
 
 ## Uses
 <ul>
     <li>Convert & download YouTube videos to MP4 via its URL (Highest available quality)</li>
     <li>Convert & download YouTube videos to MP3 via its URL</li>
+    <li>Convert & download Soundcloud songs to MP3 via its URL</li>
 </ul>
 
 ## Endpoints
@@ -14,6 +15,7 @@
 | POST | (xxx_xxx)/youtube/getTitle | Gets title back of the Video  |
 | POST  | (xxx_xxx)/youtube/downloadMp4 | Downloads an Mp4 video at highest quality  |
 | POST | (xxx_xxx)/youtube/downloadMp3 | Downloads an Mp3 audio format |
+| POST | (xxx_xxx)/soundcloud/downloadMp3 | Downloads an Mp3 audio format |
 
 ## Usage
 
