@@ -10,13 +10,32 @@ const cp = require('child_process')
 const ytdl = require('@distube/ytdl-core')
 const ffmpeg = require('ffmpeg-static');
 
+const proxyUrls = [
+    "104.233.51.90:3199:damonwindsor-s98cv:xdg8tEeAna",
+    "67.227.127.230:3199:damonwindsor-s98cv:xdg8tEeAna",
+    "168.80.133.174:3199:damonwindsor-s98cv:xdg8tEeAna",
+    "186.179.27.102:3199:damonwindsor-s98cv:xdg8tEeAna",
+    "181.177.64.189:3199:damonwindsor-s98cv:xdg8tEeAna",
+    "186.179.11.219:3199:damonwindsor-s98cv:xdg8tEeAna",
+    "168.81.199.188:3199:damonwindsor-s98cv:xdg8tEeAna",
+    "216.10.3.21:3199:damonwindsor-s98cv:xdg8tEeAna",
+    "199.168.121.247:3199:damonwindsor-s98cv:xdg8tEeAna",
+    "181.177.78.234:3199:damonwindsor-s98cv:xdg8tEeAna",
+]
+
+const getRandomProxy = () => {
+    const randomIndex = Math.floor(Math.random() * proxyUrls.length);
+    const proxy = proxyUrls[randomIndex];
+    const [host, port, username, password] = proxy.split(':');
+    return `http://${username}:${password}@${host}:${port}`;
+}
 
 const agentOptions = {
     pipelining: 5,
     maxRedirections: 0,
 };
 
-const agent = ytdl.createAgent(JSON.parse(fs.readFileSync("cookies.json")), agentOptions)
+const agent = ytdl.createAgent(JSON.parse(fs.readFileSync("cookies.json")), agentOptions, getRandomProxy())
 
 // Route base/youtubeMp4
 router.route('/getTitle').post(async (req, res) => {
@@ -123,7 +142,7 @@ router.route('/downloadMp3').post(async (req, res) => {
     try {
         const videoUrl = req.body.link;
 
-        if(!ytdl.validateURL(videoUrl))
+        if(!ytdl.validateURL(videoUrl, { agent }))
             return res.status(500).send("Invalid YouTube URL")
     
         const info = await ytdl.getInfo(videoUrl, { agent })
@@ -148,7 +167,7 @@ router.route('/downloadMp3').post(async (req, res) => {
         ytdl(videoUrl, { format: mp4Format }, { agent }).pipe(audioWriteStream);
 
         res.set({
-            'Content-Disposition': `attachment; filename="${title}.m4a"`, // Change filename extension to .mp3 | m4a so MacOS likes it
+            'Content-Disposition': `attachment; filename="${title}.m4a"`, // Change filename extension from .mp3 to m4a so MacOS likes it
             'Content-Type': 'audio/mp4',
         });
 
