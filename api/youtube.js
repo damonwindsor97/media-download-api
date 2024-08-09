@@ -9,6 +9,7 @@ const cp = require('child_process')
 // Once change is made to main repo, we can then install and replace ytdl-core where the @distube is instead 
 const ytdl = require('@distube/ytdl-core')
 const ffmpeg = require('ffmpeg-static');
+const { create } = require('domain');
 
 const proxyUrls = [
     "104.233.51.90:3199:damonwindsor-s98cv:xdg8tEeAna",
@@ -23,19 +24,27 @@ const proxyUrls = [
     "181.177.78.234:3199:damonwindsor-s98cv:xdg8tEeAna",
 ]
 
-const getRandomProxy = () => {
-    const randomIndex = Math.floor(Math.random() * proxyUrls.length);
-    const proxy = proxyUrls[randomIndex];
-    const [host, port, username, password] = proxy.split(':');
-    return `http://${username}:${password}@${host}:${port}`;
-}
-
 const agentOptions = {
     pipelining: 5,
     maxRedirections: 0,
 };
 
-const agent = ytdl.createAgent(JSON.parse(fs.readFileSync("cookies.json")), agentOptions, getRandomProxy())
+const createAgent = (() => {
+    let currentProxyIndex = 0;
+    const getNextProxy = () => {
+        const proxy = proxyUrls[currentProxyIndex];
+        currentProxyIndex = (currentProxyIndex + 1) % proxyUrls.length;
+        const [host, port, username, password] = proxy.split(':');
+        return `http://${username}:${password}@${host}:${port}`;
+    };
+
+    return () => ytdl.createAgent(
+        JSON.parse(fs.readFileSync("cookies.json")),
+        agentOptions,
+        getNextProxy()
+    );
+})();
+let currentAgent = createAgent();
 
 // Route base/youtubeMp4
 router.route('/getTitle').post(async (req, res) => {
@@ -45,13 +54,15 @@ router.route('/getTitle').post(async (req, res) => {
         if(!ytdl.validateURL)
             return res.status(500).send("Not a valid link!")
 
-        const info = await ytdl.getInfo(videoUrl, { agent });
+        const info = await ytdl.getInfo(videoUrl, { agent: currentAgent });
         const title = info.videoDetails.title;
 
         res.status(200).send(title)
         
     } catch (error) {
         console.log(error)
+        currentAgent = createAgent()
+        res.status(500).send("Internal Server Error getting Title")
     }
 })
 
@@ -65,7 +76,7 @@ router.route('/downloadMp4').post(async (req, res) => {
         }
 
         // Get video info
-        const info = await ytdl.getInfo(videoUrl, { agent });
+        const info = await ytdl.getInfo(videoUrl, { agent: currentAgent });
         const title = info.videoDetails.title;
 
         console.log(`[MP4] Video successfully obtained: ${title}`);
@@ -90,8 +101,8 @@ router.route('/downloadMp4').post(async (req, res) => {
         });
 
         // Pipe video/audio streams into ffmpeg process
-        ytdl(videoUrl, { quality: 'highestaudio' }, { agent }).pipe(ffmpegProcess.stdio[4]);
-        ytdl(videoUrl, { quality: 'highestvideo' }, { agent }).pipe(ffmpegProcess.stdio[5]);
+        ytdl(videoUrl, { quality: 'highestaudio', agent: currentAgent }).pipe(ffmpegProcess.stdio[4]);
+        ytdl(videoUrl, { quality: 'highestvideo', agent: currentAgent }).pipe(ffmpegProcess.stdio[5]);
 
         // Listen for ffmpeg process close event
         ffmpegProcess.on('close', () => {
@@ -134,6 +145,7 @@ router.route('/downloadMp4').post(async (req, res) => {
 
     } catch (error) {
         console.error('[MP4] Server-side error:', error);
+        currentAgent = createAgent();
         res.status(500).send('Internal server error - contact an admin');
     }
 });
@@ -142,10 +154,10 @@ router.route('/downloadMp3').post(async (req, res) => {
     try {
         const videoUrl = req.body.link;
 
-        if(!ytdl.validateURL(videoUrl, { agent }))
+        if(!ytdl.validateURL(videoUrl, { agent: currentAgent }))
             return res.status(500).send("Invalid YouTube URL")
     
-        const info = await ytdl.getInfo(videoUrl, { agent })
+        const info = await ytdl.getInfo(videoUrl, { agent: currentAgent })
         const title = info.videoDetails.title;
         console.log(`[MP3] Video successfully obtained: ${title}`)
 
@@ -164,7 +176,7 @@ router.route('/downloadMp3').post(async (req, res) => {
         const audioPath = path.join(process.cwd(), "temp", `${encodeURI(title)}.mp4`);
         const audioWriteStream = fs.createWriteStream(audioPath);
 
-        ytdl(videoUrl, { format: mp4Format }, { agent }).pipe(audioWriteStream);
+        ytdl(videoUrl, { format: mp4Format, agent: currentAgent }).pipe(audioWriteStream);
 
         res.set({
             'Content-Disposition': `attachment; filename="${title}.m4a"`, // Change filename extension from .mp3 to m4a so MacOS likes it
@@ -186,6 +198,7 @@ router.route('/downloadMp3').post(async (req, res) => {
 
     } catch (error) {
         console.log(error)
+        currentAgent = createAgent();
         res.status(500).send("Internal Server Error - contact an admin")
     }
 })
