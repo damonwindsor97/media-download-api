@@ -9,60 +9,268 @@ const cp = require('child_process')
 // Once change is made to main repo, we can then install and replace ytdl-core where the @distube is instead 
 const ytdl = require('@distube/ytdl-core')
 const ffmpeg = require('ffmpeg-static');
-const { create } = require('domain');
 
-const proxyUrls = [
-    "104.233.51.90:3199:damonwindsor-s98cv:xdg8tEeAna",
-    "67.227.127.230:3199:damonwindsor-s98cv:xdg8tEeAna",
-    "168.80.133.174:3199:damonwindsor-s98cv:xdg8tEeAna",
-    "186.179.27.102:3199:damonwindsor-s98cv:xdg8tEeAna",
-    "181.177.64.189:3199:damonwindsor-s98cv:xdg8tEeAna",
-    "186.179.11.219:3199:damonwindsor-s98cv:xdg8tEeAna",
-    "168.81.199.188:3199:damonwindsor-s98cv:xdg8tEeAna",
-    "216.10.3.21:3199:damonwindsor-s98cv:xdg8tEeAna",
-    "199.168.121.247:3199:damonwindsor-s98cv:xdg8tEeAna",
-    "181.177.78.234:3199:damonwindsor-s98cv:xdg8tEeAna",
+const cookies = [
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1757987058.967057,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "__Secure-1PAPISID",
+        "path": "/",
+        "sameSite": "unspecified",
+        "secure": true,
+        "session": false,
+        "storeId": "1",
+        "value": "urFcDNRfm-plixTN/AcmeU7TW8F-kt8TXr",
+        "id": 1
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1757987058.967089,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "__Secure-1PSID",
+        "path": "/",
+        "sameSite": "unspecified",
+        "secure": true,
+        "session": false,
+        "storeId": "1",
+        "value": "g.a000mwjBs2CcxmT1D1fiw9tZgWSgMEaJqj4vlQw-ItWP6cnMW94cr_Dycb8-Vl4KfPsFRmHC_QACgYKAVUSARASFQHGX2MiNfnaWu23Sa5NEyFWGawPgBoVAUF8yKrf7HFQvIKZHxtdJSS0AeLO0076",
+        "id": 2
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1754963065.850101,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "__Secure-1PSIDCC",
+        "path": "/",
+        "sameSite": "unspecified",
+        "secure": true,
+        "session": false,
+        "storeId": "1",
+        "value": "AKEyXzV3mbr-FYoU63H0_mh_beGcXaxW37XRF9rb5rqYfNhW8H_TlSlwM4C2FaOV1k51f3Gq",
+        "id": 3
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1754963058.966946,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "__Secure-1PSIDTS",
+        "path": "/",
+        "sameSite": "unspecified",
+        "secure": true,
+        "session": false,
+        "storeId": "1",
+        "value": "sidts-CjEBUFGohxMMo5M0zzeVMYygh1uFLIZAfdYnoCrAus5G01n2aaJWGMawyVgemQEGQGmVEAA",
+        "id": 4
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1757987058.967069,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "__Secure-3PAPISID",
+        "path": "/",
+        "sameSite": "no_restriction",
+        "secure": true,
+        "session": false,
+        "storeId": "1",
+        "value": "urFcDNRfm-plixTN/AcmeU7TW8F-kt8TXr",
+        "id": 5
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1757987058.967099,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "__Secure-3PSID",
+        "path": "/",
+        "sameSite": "no_restriction",
+        "secure": true,
+        "session": false,
+        "storeId": "1",
+        "value": "g.a000mwjBs2CcxmT1D1fiw9tZgWSgMEaJqj4vlQw-ItWP6cnMW94cdpDmid44NT853hwI7KNU8QACgYKAZwSARASFQHGX2MiXGJuEHNcsk0Ok2ZcsXkVBBoVAUF8yKoI_bju_tAUf0HqGo7BJFdv0076",
+        "id": 6
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1754963065.850123,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "__Secure-3PSIDCC",
+        "path": "/",
+        "sameSite": "no_restriction",
+        "secure": true,
+        "session": false,
+        "storeId": "1",
+        "value": "AKEyXzW1v-sSdPMGfXa-MqIi65XNf2AzJS-Zeu2MMQzUs8TSOpaXxx970Kb3Q0WbJGs9zz7A",
+        "id": 7
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1754963058.967002,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "__Secure-3PSIDTS",
+        "path": "/",
+        "sameSite": "no_restriction",
+        "secure": true,
+        "session": false,
+        "storeId": "1",
+        "value": "sidts-CjEBUFGohxMMo5M0zzeVMYygh1uFLIZAfdYnoCrAus5G01n2aaJWGMawyVgemQEGQGmVEAA",
+        "id": 8
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1757987058.967036,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "APISID",
+        "path": "/",
+        "sameSite": "unspecified",
+        "secure": false,
+        "session": false,
+        "storeId": "1",
+        "value": "tyldVkmzk1i1LLmg/AVooB68nK-5qQ_w5x",
+        "id": 9
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1723428743.340725,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "GPS",
+        "path": "/",
+        "sameSite": "unspecified",
+        "secure": true,
+        "session": false,
+        "storeId": "1",
+        "value": "1",
+        "id": 10
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1757987058.967016,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "HSID",
+        "path": "/",
+        "sameSite": "unspecified",
+        "secure": false,
+        "session": false,
+        "storeId": "1",
+        "value": "Ai4-UNOGshSuT3OkL",
+        "id": 11
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1757987059.785653,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "LOGIN_INFO",
+        "path": "/",
+        "sameSite": "no_restriction",
+        "secure": true,
+        "session": false,
+        "storeId": "1",
+        "value": "AFmmF2swRQIgOutHwcM6yhqYQEtAZadO29UvivsrOHuVzuYwwMjZH4YCIQCcyWLI634QOVXI--9MAsRJi4_vX9LFHkdQ43fbbyWBVg:QUQ3MjNmeksxNVhYeURWVHh3SEItTmNtM1dmdTk4YjFWeFlRdkhfVjZkRFVmNFk4ejNjVFIwSlhmMmdFTzNiZ0t0NEl6UDJXUmZRSlk5Mi1UbXhqMlAzeEUycEZIdzBHb1ZHVUxrSUh3TDNCVmZKQjVfeTdaUzRuZnNWanBiQ0ZZUXhTSGRiWEpaejJFaDd4OTZNMHg0ZU5abnQtRlpiVE9B",
+        "id": 12
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1757987065.692163,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "PREF",
+        "path": "/",
+        "sameSite": "unspecified",
+        "secure": true,
+        "session": false,
+        "storeId": "1",
+        "value": "tz=Australia.Sydney",
+        "id": 13
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1757987058.967047,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "SAPISID",
+        "path": "/",
+        "sameSite": "unspecified",
+        "secure": true,
+        "session": false,
+        "storeId": "1",
+        "value": "urFcDNRfm-plixTN/AcmeU7TW8F-kt8TXr",
+        "id": 14
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1757987058.967078,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "SID",
+        "path": "/",
+        "sameSite": "unspecified",
+        "secure": false,
+        "session": false,
+        "storeId": "1",
+        "value": "g.a000mwjBs2CcxmT1D1fiw9tZgWSgMEaJqj4vlQw-ItWP6cnMW94cjBY1tDt92IlM6kO_dg3glgACgYKAcoSARASFQHGX2Minx9E5fvYQpPyl0kmUoUYYxoVAUF8yKoAml6V-CMoXSMMZbAvm30H0076",
+        "id": 15
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1754963065.850025,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "SIDCC",
+        "path": "/",
+        "sameSite": "unspecified",
+        "secure": false,
+        "session": false,
+        "storeId": "1",
+        "value": "AKEyXzWrYh9Tv_tPeVFeJTRW6j79fWcMoENjcFZGthD-PN1aJKHmvkPL1sVunPU6fbf7OpTt",
+        "id": 16
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1757987058.967027,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "SSID",
+        "path": "/",
+        "sameSite": "unspecified",
+        "secure": true,
+        "session": false,
+        "storeId": "1",
+        "value": "A9HpobxuBud1fTynA",
+        "id": 17
+    }
 ]
-
-const agentOptions = {
-    pipelining: 5,
-    maxRedirections: 0,
-};
-
-const createAgent = (() => {
-    let currentProxyIndex = 0;
-    const getNextProxy = () => {
-        const proxy = proxyUrls[currentProxyIndex];
-        currentProxyIndex = (currentProxyIndex + 1) % proxyUrls.length;
-        const [host, port, username, password] = proxy.split(':');
-        return `http://${username}:${password}@${host}:${port}`;
-    };
-
-    return () => ytdl.createAgent(
-        JSON.parse(fs.readFileSync("cookies.json")),
-        agentOptions,
-        getNextProxy()
-    );
-})();
-let currentAgent = createAgent();
+    
+const agent = ytdl.createAgent(cookies)
 
 // Route base/youtubeMp4
 router.route('/getTitle').post(async (req, res) => {
-
     try {
+        if (!agent) {
+            return res.status(500).send("Proxy agent not available");
+        }
+
         const videoUrl = req.body.link;
         if(!ytdl.validateURL)
             return res.status(500).send("Not a valid link!")
 
-        const info = await ytdl.getInfo(videoUrl, { agent: currentAgent });
+        const info = await ytdl.getInfo(videoUrl, { agent } );
         const title = info.videoDetails.title;
 
         res.status(200).send(title)
         
     } catch (error) {
         console.log(error)
-        currentAgent = createAgent()
-        res.status(500).send("Internal Server Error getting Title")
     }
 })
 
@@ -76,7 +284,7 @@ router.route('/downloadMp4').post(async (req, res) => {
         }
 
         // Get video info
-        const info = await ytdl.getInfo(videoUrl, { agent: currentAgent });
+        const info = await ytdl.getInfo(videoUrl, { agent });
         const title = info.videoDetails.title;
 
         console.log(`[MP4] Video successfully obtained: ${title}`);
@@ -101,8 +309,8 @@ router.route('/downloadMp4').post(async (req, res) => {
         });
 
         // Pipe video/audio streams into ffmpeg process
-        ytdl(videoUrl, { quality: 'highestaudio', agent: currentAgent }).pipe(ffmpegProcess.stdio[4]);
-        ytdl(videoUrl, { quality: 'highestvideo', agent: currentAgent }).pipe(ffmpegProcess.stdio[5]);
+        ytdl(videoUrl, { quality: 'highestaudio', agent }).pipe(ffmpegProcess.stdio[4]);
+        ytdl(videoUrl, { quality: 'highestvideo', agent }).pipe(ffmpegProcess.stdio[5]);
 
         // Listen for ffmpeg process close event
         ffmpegProcess.on('close', () => {
@@ -145,24 +353,26 @@ router.route('/downloadMp4').post(async (req, res) => {
 
     } catch (error) {
         console.error('[MP4] Server-side error:', error);
-        currentAgent = createAgent();
         res.status(500).send('Internal server error - contact an admin');
     }
 });
 
 router.route('/downloadMp3').post(async (req, res) => {    
     try {
+        if (!agent) {
+            return res.status(500).send("Proxy agent not available");
+        }
         const videoUrl = req.body.link;
 
-        if(!ytdl.validateURL(videoUrl, { agent: currentAgent }))
+        if(!ytdl.validateURL(videoUrl, { agent }))
             return res.status(500).send("Invalid YouTube URL")
     
-        const info = await ytdl.getInfo(videoUrl, { agent: currentAgent })
+        const info = await ytdl.getInfo(videoUrl, { agent })
         const title = info.videoDetails.title;
         console.log(`[MP3] Video successfully obtained: ${title}`)
 
         const formats = ytdl.filterFormats(info.formats || [], 'audioonly');
-        
+        console.log("[MP3] Checking audio formats")
         if (formats.length === 0) {
             return res.status(400).send("No audio formats found for the provided video");
         }
@@ -172,16 +382,14 @@ router.route('/downloadMp3').post(async (req, res) => {
         if (!mp4Format) {
             return res.status(400).send("No MP4 format for the provided video");
         }
+        console.log("[MP3] Audio formats found")
 
+        console.log("[MP3] Creating WriteStream")
         const audioPath = path.join(process.cwd(), "temp", `${encodeURI(title)}.mp4`);
         const audioWriteStream = fs.createWriteStream(audioPath);
 
-        ytdl(videoUrl, { format: mp4Format, agent: currentAgent }).pipe(audioWriteStream);
-
-        res.set({
-            'Content-Disposition': `attachment; filename="${title}.m4a"`, // Change filename extension from .mp3 to m4a so MacOS likes it
-            'Content-Type': 'audio/mp4',
-        });
+        console.log("[MP3] Initiating process with ytdl")
+        ytdl(videoUrl, { format: mp4Format, agent}).pipe(audioWriteStream);
 
         audioWriteStream.on('finish', () => {
             console.log(`[MP3] Video successfully converted: ${title}`);
@@ -198,7 +406,6 @@ router.route('/downloadMp3').post(async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        currentAgent = createAgent();
         res.status(500).send("Internal Server Error - contact an admin")
     }
 })
