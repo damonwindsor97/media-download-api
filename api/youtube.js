@@ -312,6 +312,8 @@ router.route('/downloadMp4').post(async (req, res) => {
         ytdl(videoUrl, { quality: 'highestaudio', agent }).pipe(ffmpegProcess.stdio[4]);
         ytdl(videoUrl, { quality: 'highestvideo', agent }).pipe(ffmpegProcess.stdio[5]);
 
+        
+
         // Listen for ffmpeg process close event
         ffmpegProcess.on('close', () => {
             console.log(`[MP4] Video successfully converted: ${title}`);
@@ -390,6 +392,11 @@ router.route('/downloadMp3').post(async (req, res) => {
 
         console.log("[MP3] Initiating process with ytdl")
         ytdl(videoUrl, { format: mp4Format, agent}).pipe(audioWriteStream);
+
+        res.set({
+            'Content-Disposition': `attachment; filename="${title}.m4a"`, // Change filename extension to .mp3 | m4a so MacOS likes it
+            'Content-Type': 'audio/mp3',
+        });
 
         audioWriteStream.on('finish', () => {
             console.log(`[MP3] Video successfully converted: ${title}`);
