@@ -387,20 +387,20 @@ router.route('/downloadMp3').post(async (req, res) => {
         console.log("[MP3] Audio formats found")
 
         console.log("[MP3] Creating WriteStream")
-        const audioPath = path.join(process.cwd(), "temp", `${encodeURI(title)}.mp4`);
+        const audioPath = path.join(process.cwd(), "temp", `${encodeURI(title)}.m4a`);
         const audioWriteStream = fs.createWriteStream(audioPath);
 
         console.log("[MP3] Initiating process with ytdl")
         ytdl(videoUrl, { format: mp4Format, agent}).pipe(audioWriteStream);
 
         res.set({
-            'Content-Disposition': `attachment; filename="${title}.m4a"`, // Change filename extension to .mp3 | m4a so MacOS likes it
-            'Content-Type': 'audio/mp3',
+            'Content-Disposition': `attachment; filename="${encodeURIComponent(title)}.m4a"`, // Change filename extension to .mp3 | m4a so MacOS likes it
+            'Content-Type': 'audio/mp4',
         });
 
         audioWriteStream.on('finish', () => {
             console.log(`[MP3] Video successfully converted: ${title}`);
-            res.download(audioPath, `${title}.mp3`, (error) => {
+            res.download(audioPath, `${encodeURIComponent(title)}.m4a`, (error) => {
                 if (error) {
                     console.log(error);
                     res.status(500).send("Error downloading file");
