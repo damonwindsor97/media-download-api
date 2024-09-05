@@ -14,6 +14,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
+require('dotenv').config();
+
 // Ensure the existence of the temp directory
 const tempDir = path.join(__dirname, 'temp');
 if (!fs.existsSync(tempDir)) {
@@ -26,6 +28,9 @@ app.use("/youtube", youtubeRoutes);
 
 const soundcloudRoutes = require('./api/soundcloud.js')
 app.use("/soundcloud", soundcloudRoutes)
+
+const spotifyRoutes = require('./api/spotify.js');
+app.use("/spotify", spotifyRoutes)
 
 const port = process.env.PORT || 5000;
 app.listen(port, function () {
