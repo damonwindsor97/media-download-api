@@ -3,11 +3,30 @@ const cors = require('cors');
 const morgan = require('morgan')
 const fs = require('fs')
 const path = require('path')
+const http = require('http')
+const { Server } = require('socket.io');
+const { youtubeRouter, progressEmitter } = require("./api/youtube.js");
 
 const app = express();
+const server = http.createServer(app);
 
+const io = new Server(server, {
+    // cors: {
+    //   origin: "http://localhost:5173",  
+    //   methods: ["GET", "POST"],
+    //   credentials: true
+    // }
+    cors: {
+      origin: "https://linkify.gg/",  
+      methods: ["GET", "POST"],
+      credentials: true
+    }
+})
+  
 app.use(cors({ 
-    origin: "*",
+origin: "http://localhost:5173",  
+methods: ["GET", "POST"],
+credentials: true
 }));
 
 app.use(express.json());
@@ -23,8 +42,7 @@ if (!fs.existsSync(tempDir)) {
     console.log('Temp directory created successfully.');
 }
 
-const youtubeRoutes = require("./api/youtube.js");
-app.use("/youtube", youtubeRoutes);
+app.use("/youtube", youtubeRouter);
 
 const soundcloudRoutes = require('./api/soundcloud.js')
 app.use("/soundcloud", soundcloudRoutes)
@@ -32,7 +50,29 @@ app.use("/soundcloud", soundcloudRoutes)
 const spotifyRoutes = require('./api/spotify.js');
 app.use("/spotify", spotifyRoutes)
 
+// Progress Bar Emitter Jazz
+io.on('connection', (socket) => {
+    console.log('A client connected');
+
+    const progressListener = (percent) => {
+        socket.emit('downloadProgress', percent);
+    };
+
+    const completeListener = () => {
+        socket.emit('downloadComplete');
+    };
+
+    progressEmitter.on('progress', progressListener);
+    progressEmitter.on('complete', completeListener);
+
+    socket.on('disconnect', () => {
+        progressEmitter.off('progress', progressListener);
+        progressEmitter.off('complete', completeListener);
+        console.log('A client disconnected');
+    });
+});
+
 const port = process.env.PORT || 5000;
-app.listen(port, function () {
+server.listen(port, function () {
     console.log(`Server started on port: ${port}`);
 });

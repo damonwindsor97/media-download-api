@@ -12,6 +12,8 @@
     "https-proxy-agent": "^7.0.5",
     "morgan": "^1.10.0",
     "nodemon": "^3.1.1",
+    "socket-io": "^1.0.0",
+    "socket.io": "^4.7.5",
     "soundcloud-downloader": "^1.0.0",
     "spotify-uri": "^4.1.0",
     "spotify-web-api-node": "^5.0.2",

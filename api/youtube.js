@@ -10,6 +10,9 @@ const cp = require('child_process')
 const ytdl = require('@distube/ytdl-core')
 const ffmpeg = require('ffmpeg-static');
 
+const EventEmitter = require('events');
+const progressEmitter = new EventEmitter();
+
 const cookies = [
     {
         "domain": ".youtube.com",
@@ -275,26 +278,49 @@ router.route('/getTitle').post(async (req, res) => {
 })
 
 router.route('/downloadMp4').post(async (req, res) => {
+    let ffmpegProcess;
+    // array to store paths of temp files
+    let cleanupFiles = [];
+
+    // Cleanup function to kill the process and delete all temp files
+    const cleanup = () => {
+        // if the ffmpeg process exists, stop it immediantly
+        if (ffmpegProcess) {
+            ffmpegProcess.kill('SIGKILL');
+        }
+        
+        // Then, go over all files with cleanupFiles array, deleting them
+        cleanupFiles.forEach(file => {
+            fs.unlink(file, (error) => {
+                if (error) console.error(`Error deleting file ${file}:`, error);
+                else console.log(`File deleted: ${file}`);
+            });
+        });
+    };
+
+    // Adding event listener to the req
+    // 'close' event is emitted when user closes connection before response is sent back (from refreshing page etc.)
+    req.on('close', cleanup);
+
     try {
         const videoUrl = req.body.link;
-
-        // Validate YouTube URL
+        console.log('[YT>MP4] YouTube link obtained');
+        // Validate URL
         if (!ytdl.validateURL(videoUrl)) {
-            return res.status(500).send('Invalid YouTube URL');
+            return res.status(400).send('Invalid YouTube URL');
         }
+        console.log('[YT>MP4] YouTube link Valid');
 
-        // Get video info
         const info = await ytdl.getInfo(videoUrl, { agent });
-        const title = info.videoDetails.title;
+        const title = info.videoDetails.title.replace(/[^\w\s]/gi, '');
+        console.log(`[YT>MP4] Video info obtained: ${title}`);
 
-        console.log(`[MP4] Video successfully obtained: ${title}`);
-
-        // Prepare paths
         const tempDir = path.join(process.cwd(), 'temp');
-        const ffmpegPath = path.join(tempDir, `${title}${Date.now()}.mp4`);
+        const ffmpegPath = path.join(tempDir, `${title}_${Date.now()}.mp4`);
+        cleanupFiles.push(ffmpegPath);
 
-        // Start ffmpeg process
-        const ffmpegProcess = cp.spawn(ffmpeg, [
+        console.log('[YT>MP4] Beginning ffmpeg process');
+        ffmpegProcess = cp.spawn(ffmpeg, [
             '-loglevel', '8', '-hide_banner',
             '-progress', 'pipe:3',
             '-i', 'pipe:4',
@@ -308,58 +334,74 @@ router.route('/downloadMp4').post(async (req, res) => {
             stdio: ['inherit', 'inherit', 'inherit', 'pipe', 'pipe', 'pipe'],
         });
 
-        // Pipe video/audio streams into ffmpeg process
-        ytdl(videoUrl, { quality: 'highestaudio', agent }).pipe(ffmpegProcess.stdio[4]);
-        ytdl(videoUrl, { quality: 'highestvideo', agent }).pipe(ffmpegProcess.stdio[5]);
+        // Process to keep progress on one-line rather than reprint
+        function printProgress(progress) {
+            process.stdout.clearLine(0);
+            process.stdout.cursorTo(0);
+            process.stdout.write(`[YT>MP4] Download progress: ${progress}%`)
+        };
 
-        
-
-        // Listen for ffmpeg process close event
-        ffmpegProcess.on('close', () => {
-            console.log(`[MP4] Video successfully converted: ${title}`);
-        
-            // After ffmpegProcess is finished, send the file to the client
-            res.download(ffmpegPath, `${title}.mp4`, (error) => {
-                if (error) {
-                    console.error('[MP4] Download error:', error);
-                    res.status(500).send('Error downloading file', error);
-                } else {
-                    // Delete the temp video file after successful download
-                    fs.unlink(ffmpegPath, (error) => {
-                        if (error) {
-                            console.error('[MP4] Error deleting file:', error);
-                        } else {
-                            console.log('[MP4] File deleted:', ffmpegPath);
-                        }
-                    });
+        // ytdl jazziness
+        console.log("[YT>MP4] Initiating process with ytdl");
+        const ytdlVideoStream = ytdl(videoUrl, { quality: 'highestvideo', agent })
+        // PROGRESS BAR
+        .on('progress', (chunkLength, downloaded, total) => {
+            let percent = (downloaded / total * 100).toFixed(2);
+            function videoProgress(){
+                // Emit our progress bar Emitter
+                progressEmitter.emit('progress', parseFloat(percent))
+                // this is for Dev purposes
+                printProgress(percent)
+                
+                if(percent >= 100) {
+                    progressEmitter.emit('complete')
                 }
-            });
-        });
-
-        // Handle ffmpeg process errors
-        ffmpegProcess.on('error', (error) => {
-            console.error('[MP4] ffmpegProcess error:', error);
-            res.status(500).send('Internal server error during video processing');
-        });
-
-        // Listen for data events from ffmpeg process stdout stream
-        ffmpegProcess.stdio[3].on('data', chunk => {
-            // Parse ffmpeg output if needed
-            const lines = chunk.toString().trim().split('\n');
-            const args = {};
-            for (const line of lines) {
-                const [key, value] = line.split('=');
-                args[key.trim()] = value.trim();
             }
+            videoProgress();
+        })
+        .on('error', (error) => {
+            console.error('[YT>MP4] Error in ytdl:', error);
+            cleanup();
+            res.status(500).send('Error downloading video');
+        });
+        ytdlVideoStream.pipe(ffmpegProcess.stdio[5])
+        ytdl(videoUrl, { quality: 'highestaudio', agent }).pipe(ffmpegProcess.stdio[4]);
+
+        // Error Handling, for if user leaves unexpectedly
+        // 'code' = exit code or exit status
+        ffmpegProcess.on('close', (code) => {
+            console.log(`[YT>MP4] ffmpeg process closed with code ${code}`);
+            if (code === 0) {
+                console.log(`[YT>MP4] Video successfully converted: ${title}`);
+                res.download(ffmpegPath, `${title}.mp4`, (error) => {
+                    if (error) {
+                        console.error('[YT>MP4] Download error:', error);
+                        res.status(500).send('Error downloading file');
+                    }
+                    cleanup();
+                });
+            } else {
+                console.error(`[YT>MP4] ffmpeg process exited with code ${code}`);
+                res.status(500).send('Error processing video');
+                cleanup();
+            }
+        });
+        // Standard Error handling
+        ffmpegProcess.on('error', (error) => {
+            console.error('[YT>MP4] ffmpegProcess error:', error);
+            res.status(500).send('Internal server error during video processing');
+            cleanup();
         });
 
     } catch (error) {
-        console.error('[MP4] Server-side error:', error);
+        console.error('[YT>MP4] Server-side error:', error);
         res.status(500).send('Internal server error - contact an admin');
+        cleanup();
     }
 });
 
 router.route('/downloadMp3').post(async (req, res) => {    
+    
     try {
         if (!agent) {
             return res.status(500).send("Proxy agent not available");
@@ -390,8 +432,28 @@ router.route('/downloadMp3').post(async (req, res) => {
         const audioPath = path.join(process.cwd(), "temp", `${encodeURI(title)}.m4a`);
         const audioWriteStream = fs.createWriteStream(audioPath);
 
+        // Process to keep progress on one-line rather than reprint
+        function printProgress(progress) {
+            process.stdout.clearLine(0);
+            process.stdout.cursorTo(0);
+            process.stdout.write(`[YT>MP4] Download progress: ${progress}%`)
+        };
+
         console.log("[MP3] Initiating process with ytdl")
-        ytdl(videoUrl, { format: mp4Format, agent}).pipe(audioWriteStream);
+        const ytdlStream = ytdl(videoUrl, { format: mp4Format, agent})
+        .on('progress', (chunkLength, downloaded, total) => {
+            let percent = (downloaded / total * 100).toFixed(2);
+            function videoProgress(){
+                printProgress(percent)
+            }
+            videoProgress()
+        })
+        .on('error', (error) => {
+            console.log('[YT>MP3] Error in ytdl', error)
+            cleanup();
+            res.status(500).send('Error downloading audio')
+        })
+        ytdlStream.pipe(audioWriteStream);
 
         res.set({
             'Content-Disposition': `attachment; filename="${encodeURIComponent(title)}.m4a"`, // Change filename extension to .mp3 | m4a so MacOS likes it
@@ -417,4 +479,5 @@ router.route('/downloadMp3').post(async (req, res) => {
     }
 })
 
-module.exports = router
+
+module.exports = { progressEmitter, youtubeRouter: router };
