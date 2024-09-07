@@ -42,6 +42,7 @@ if (!fs.existsSync(tempDir)) {
     console.log('Temp directory created successfully.');
 }
 
+const youtubeRoutes = require('./api/youtube.js')
 app.use("/youtube", youtubeRouter);
 
 const soundcloudRoutes = require('./api/soundcloud.js')

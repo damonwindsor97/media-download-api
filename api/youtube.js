@@ -281,6 +281,8 @@ router.route('/downloadMp4').post(async (req, res) => {
     let ffmpegProcess;
     // array to store paths of temp files
     let cleanupFiles = [];
+    // needed for process.stdout.clearLine and cursorTo dont exist anymore
+    var readline = require('readline');
 
     // Cleanup function to kill the process and delete all temp files
     const cleanup = () => {
@@ -336,8 +338,8 @@ router.route('/downloadMp4').post(async (req, res) => {
 
         // Process to keep progress on one-line rather than reprint
         function printProgress(progress) {
-            process.stdout.clearLine(0);
-            process.stdout.cursorTo(0);
+            readline.clearLine(process.stdout.clearLine(0));
+            readline.cursorTo(process.stdout.cursorTo(0));
             process.stdout.write(`[YT>MP4] Download progress: ${progress}%`)
         };
 
