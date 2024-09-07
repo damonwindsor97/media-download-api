@@ -281,8 +281,6 @@ router.route('/downloadMp4').post(async (req, res) => {
     let ffmpegProcess;
     // array to store paths of temp files
     let cleanupFiles = [];
-    // needed for process.stdout.clearLine and cursorTo dont exist anymore
-    var readline = require('readline');
 
     // Cleanup function to kill the process and delete all temp files
     const cleanup = () => {
@@ -336,13 +334,6 @@ router.route('/downloadMp4').post(async (req, res) => {
             stdio: ['inherit', 'inherit', 'inherit', 'pipe', 'pipe', 'pipe'],
         });
 
-        // Process to keep progress on one-line rather than reprint
-        function printProgress(progress) {
-            readline.clearLine(process.stdout.clearLine(0));
-            readline.cursorTo(process.stdout.cursorTo(0));
-            process.stdout.write(`[YT>MP4] Download progress: ${progress}%`)
-        };
-
         // ytdl jazziness
         console.log("[YT>MP4] Initiating process with ytdl");
         const ytdlVideoStream = ytdl(videoUrl, { quality: 'highestvideo', agent })
@@ -352,8 +343,6 @@ router.route('/downloadMp4').post(async (req, res) => {
             function videoProgress(){
                 // Emit our progress bar Emitter
                 progressEmitter.emit('progress', parseFloat(percent))
-                // this is for Dev purposes
-                printProgress(percent)
                 
                 if(percent >= 100) {
                     progressEmitter.emit('complete')
@@ -435,21 +424,11 @@ router.route('/downloadMp3').post(async (req, res) => {
         const audioPath = path.join(process.cwd(), "temp", `${encodeURI(title)}.m4a`);
         const audioWriteStream = fs.createWriteStream(audioPath);
 
-        // Process to keep progress on one-line rather than reprint
-        function printProgress(progress) {
-            readline.clearLine(process.stdout, 0);
-            readline.cursorTo(process.stdout, 0);
-            process.stdout.write(`[YT>MP4] Download progress: ${progress}%`)
-        };
 
         console.log("[MP3] Initiating process with ytdl")
         const ytdlStream = ytdl(videoUrl, { format: mp4Format, agent})
         .on('progress', (chunkLength, downloaded, total) => {
             let percent = (downloaded / total * 100).toFixed(2);
-            function videoProgress(){
-                printProgress(percent)
-            }
-            videoProgress()
         })
         .on('error', (error) => {
             console.log('[YT>MP3] Error in ytdl', error)
