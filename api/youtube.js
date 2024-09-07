@@ -403,6 +403,7 @@ router.route('/downloadMp4').post(async (req, res) => {
 });
 
 router.route('/downloadMp3').post(async (req, res) => {    
+    var readline = require('readline');
     
     try {
         if (!agent) {
@@ -436,8 +437,8 @@ router.route('/downloadMp3').post(async (req, res) => {
 
         // Process to keep progress on one-line rather than reprint
         function printProgress(progress) {
-            process.stdout.clearLine(0);
-            process.stdout.cursorTo(0);
+            readline.clearLine(process.stdout.clearLine(0));
+            readline.cursorTo(process.stdout.cursorTo(0));
             process.stdout.write(`[YT>MP4] Download progress: ${progress}%`)
         };
 
