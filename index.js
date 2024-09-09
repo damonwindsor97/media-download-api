@@ -16,8 +16,6 @@ const io = new Server(server, {
     //   methods: ["GET", "POST"],
     //   credentials: true
     // }
-<<<<<<< Updated upstream
-=======
 
     // LIVE DEV TESTING ----------------------
     // cors: {
@@ -28,7 +26,7 @@ const io = new Server(server, {
   
 
     // LIVE ----------------------
->>>>>>> Stashed changes
+
     cors: {
       origin: "https://linkify.gg/",  
       methods: ["GET", "POST"],
