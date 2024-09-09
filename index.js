@@ -11,16 +11,27 @@ const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
+    //  LOCAL TESTING -------------------
     // cors: {
     //   origin: "http://localhost:5173",  
     //   methods: ["GET", "POST"],
     //   credentials: true
     // }
+
+    // LIVE DEV TESTING ----------------------
     cors: {
-      origin: "https://linkify.gg/",  
-      methods: ["GET", "POST"],
-      credentials: true
+        origin: "https://dev-linkify-gg.onrender.com",  
+        methods: ["GET", "POST"],
+        credentials: true
     }
+  
+
+    // LIVE ----------------------
+    // cors: {
+    //   origin: "https://linkify.gg/",  
+    //   methods: ["GET", "POST"],
+    //   credentials: true
+    // }
 })
   
 app.use(cors({ 
