@@ -16,6 +16,19 @@ const io = new Server(server, {
     //   methods: ["GET", "POST"],
     //   credentials: true
     // }
+<<<<<<< Updated upstream
+=======
+
+    // LIVE DEV TESTING ----------------------
+    // cors: {
+    //     origin: "https://dev-linkify-gg.onrender.com",  
+    //     methods: ["GET", "POST"],
+    //     credentials: true
+    // }
+  
+
+    // LIVE ----------------------
+>>>>>>> Stashed changes
     cors: {
       origin: "https://linkify.gg/",  
       methods: ["GET", "POST"],
