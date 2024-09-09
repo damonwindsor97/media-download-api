@@ -26,9 +26,8 @@ const io = new Server(server, {
   
 
     // LIVE ----------------------
-
     cors: {
-      origin: "https://linkify.gg/",  
+      origin: "https://linkify.gg",  
       methods: ["GET", "POST"],
       credentials: true
     }
