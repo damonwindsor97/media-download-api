@@ -18,20 +18,22 @@ const io = new Server(server, {
     //   credentials: true
     // }
 
-    // LIVE DEV TESTING ----------------------
-    cors: {
-        origin: "https://dev-linkify-gg.onrender.com",  
-        methods: ["GET", "POST"],
-        credentials: true
-    }
+
+    // cors: {
+    //     origin: "https://dev-linkify-gg.onrender.com",  
+    //     methods: ["GET", "POST"],
+    //     credentials: true
+    // }
   
 
     // LIVE ----------------------
-    // cors: {
-    //   origin: "https://linkify.gg/",  
-    //   methods: ["GET", "POST"],
-    //   credentials: true
-    // }
+    cors: {
+      origin: "https://linkify.gg",  
+      methods: ["GET", "POST"],
+      credentials: true
+
+    }
+  
 })
   
 app.use(cors({ 
