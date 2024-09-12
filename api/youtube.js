@@ -388,7 +388,6 @@ router.route('/downloadMp4').post(async (req, res) => {
 });
 
 router.route('/downloadMp3').post(async (req, res) => {    
-    var readline = require('readline');
     
     try {
         if (!agent) {
