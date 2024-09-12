@@ -42,7 +42,7 @@ router.route('/downloadMp3').post(async (req, res) => {
         const title = info.title;
         console.log('[SC] Audio Link successfully obtained')
 
-        const audioPath = path.join(process.cwd(), "temp", `${title}.mp3`);
+        const audioPath = path.join(process.cwd(), "temp", `${encodeURIComponent(title)}.mp3`);
 
         const audioWriteStream = await scdl.download(soundcloudUrl, CLIENT_ID).then(stream => stream.pipe(fs.createWriteStream(audioPath)))
 
