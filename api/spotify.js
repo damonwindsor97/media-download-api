@@ -421,7 +421,7 @@ router.route('/downloadMp3').post(async (req, res) => {
         console.log("[Spot] Audio formats found")
 
         console.log("[Spot] Creating WriteStream")
-        const audioPath = path.join(process.cwd(), "temp", `${encodeURI(title)}.m4a`);
+        const audioPath = path.join(process.cwd(), "temp", `${encodeURIComponent(title)}.m4a`);
         const audioWriteStream = fs.createWriteStream(audioPath);
 
         console.log("[Spot] Initiating process with ytdl")

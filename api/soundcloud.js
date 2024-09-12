@@ -42,12 +42,12 @@ router.route('/downloadMp3').post(async (req, res) => {
         const title = info.title;
         console.log('[SC] Audio Link successfully obtained')
 
-        const audioPath = path.join(process.cwd(), "temp", `${title}.mp3`);
+        const audioPath = path.join(process.cwd(), "temp", `${encodeURIComponent(title)}.mp3`);
 
         const audioWriteStream = await scdl.download(soundcloudUrl, CLIENT_ID).then(stream => stream.pipe(fs.createWriteStream(audioPath)))
 
         res.set({
-            'Content-Disposition': `attachment; filename="${title}.m4a"`, // Change filename extension to .mp3 | m4a so MacOS likes it
+            'Content-Disposition': `attachment; filename="${encodeURIComponent(title)}.m4a"`, // Change filename extension to .mp3 | m4a so MacOS likes it
             'Content-Type': 'audio/mp3',
         });
 

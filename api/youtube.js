@@ -340,15 +340,11 @@ router.route('/downloadMp4').post(async (req, res) => {
         // PROGRESS BAR
         .on('progress', (chunkLength, downloaded, total) => {
             let percent = (downloaded / total * 100).toFixed(2);
-            function videoProgress(){
                 // Emit our progress bar Emitter
                 progressEmitter.emit('progress', parseFloat(percent))
-                
                 if(percent >= 100) {
                     progressEmitter.emit('complete')
                 }
-            }
-            videoProgress();
         })
         .on('error', (error) => {
             console.error('[YT>MP4] Error in ytdl:', error);
@@ -392,7 +388,6 @@ router.route('/downloadMp4').post(async (req, res) => {
 });
 
 router.route('/downloadMp3').post(async (req, res) => {    
-    var readline = require('readline');
     
     try {
         if (!agent) {
