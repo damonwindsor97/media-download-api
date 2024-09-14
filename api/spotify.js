@@ -446,8 +446,16 @@ router.route('/downloadMp3').post(async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error fetching track information:', error);
-        res.status(500).send('Failed to fetch track information');
+        if (error.response && error.response.status === 429){
+            res.status(429).json({
+                error: 'Too Many Requests',
+                message: 'Rate Limit exceeded. Try again later.',
+                retryAfter: error.response.headers['retry-after'] || 120  // 120 seconds
+            })
+        } else {
+            console.error('[Spot] Internal server error:', error);
+            res.status(500).send('Internal server error.');
+        }
     }
 });
 

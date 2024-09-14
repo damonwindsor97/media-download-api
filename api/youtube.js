@@ -381,9 +381,17 @@ router.route('/downloadMp4').post(async (req, res) => {
         });
 
     } catch (error) {
-        console.error('[YT>MP4] Server-side error:', error);
-        res.status(500).send('Internal server error - contact an admin');
-        cleanup();
+        if (error.response && error.response.status === 429){
+            res.status(429).json({
+                error: 'Too Many Requests',
+                message: 'Rate Limit exceeded.',
+                retryAfter: error.response.headers['retry-after'] || 120  // 120 seconds
+            })
+        } else {
+            console.error('[YT>MP4] Internal server error:', error);
+            res.status(500).send('Internal server error.');
+            cleanup();
+        }
     }
 });
 
@@ -451,10 +459,18 @@ router.route('/downloadMp3').post(async (req, res) => {
         });
 
     } catch (error) {
-        console.log(error)
-        res.status(500).send("Internal Server Error - contact an admin")
+        if (error.response && error.response.status === 429){
+            res.status(429).json({
+                error: 'Too Many Requests',
+                message: 'Rate Limit exceeded.',
+                retryAfter: error.response.headers['retry-after'] || 120  // 120 seconds
+            })
+
+        } else {
+            console.log(error)
+            res.status(500).json({ error: "Internal Server Error" })
+        }
     }
 })
-
 
 module.exports = { progressEmitter, youtubeRouter: router };
