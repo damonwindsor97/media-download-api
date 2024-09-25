@@ -10,6 +10,8 @@ const cp = require('child_process')
 const ytdl = require('@distube/ytdl-core')
 const ffmpeg = require('ffmpeg-static');
 
+const {CustomError}  = require('../middleware/errorHandler')
+
 const EventEmitter = require('events');
 const progressEmitter = new EventEmitter();
 
@@ -459,16 +461,11 @@ router.route('/downloadMp3').post(async (req, res) => {
         });
 
     } catch (error) {
-        if (error.response && error.response.status === 429){
-            res.status(429).json({
-                error: 'Too Many Requests',
-                message: 'Rate Limit exceeded.',
-                retryAfter: error.response.headers['retry-after'] || 120  // 120 seconds
-            })
-
+        if (error.response.status === 429){
+            throw new CustomError('Too Many Requests, please try again later.', 429, 'TOO_MANY_REQUEST');
         } else {
             console.log(error)
-            res.status(500).json({ error: "Internal Server Error" })
+            throw new CustomError('Internal Server Error.', 500, 'SERVER_ERROR');
         }
     }
 })

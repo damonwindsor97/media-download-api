@@ -7,6 +7,8 @@ const http = require('http')
 const { Server } = require('socket.io');
 const { youtubeRouter, progressEmitter } = require("./api/youtube.js");
 
+const { errorHandler } = require('./middleware/errorHandler.js')
+
 const app = express();
 const server = http.createServer(app);
 
@@ -19,20 +21,20 @@ const io = new Server(server, {
     // }
 
 
-    // cors: {
-    //     origin: "https://dev-linkify-gg.onrender.com",  
-    //     methods: ["GET", "POST"],
-    //     credentials: true
-    // }
+    cors: {
+        origin: "https://dev-linkify-gg.onrender.com",  
+        methods: ["GET", "POST"],
+        credentials: true
+    }
   
 
     // LIVE ----------------------
-    cors: {
-      origin: "https://linkify.gg",  
-      methods: ["GET", "POST"],
-      credentials: true
+    // cors: {
+    //   origin: "https://linkify.gg",  
+    //   methods: ["GET", "POST"],
+    //   credentials: true
 
-    }
+    // }
   
 })
   
@@ -45,6 +47,7 @@ credentials: true
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+app.use(errorHandler)
 
 require('dotenv').config();
 
