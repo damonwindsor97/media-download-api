@@ -15,6 +15,16 @@ const {CustomError}  = require('../middleware/errorHandler')
 const EventEmitter = require('events');
 const progressEmitter = new EventEmitter();
 
+const { Agent } = require('https'); 
+
+const agent = new Agent({
+    host: 'pr.oxylabs.io',
+    port: 7777,
+    auth: 'customer-damonwindsor97_AiLaW:Chopper1997',
+    // ignore certificate
+    rejectUnauthorized: false 
+});
+
 const cookies = [
     {
         "domain": ".youtube.com",
@@ -255,8 +265,28 @@ const cookies = [
         "id": 17
     }
 ]
-    
-const agent = ytdl.createAgent(cookies)
+
+// We dont really need this, this was made to go through multiple proxies - but now it seems the functions wont work without it, even though it isnt needed... hm.
+class IPRotator {
+    constructor(ips) {
+        this.ips = ips;
+        this.currentIndex = 0;
+    }
+
+    getNextIP() {
+        const ip = this.ips[this.currentIndex];
+        this.currentIndex = (this.currentIndex + 1) % this.ips.length;
+        return ip
+    }
+}
+
+const ipRotator = new IPRotator([
+    'http://customer-damonwindsor97_AiLaW:Chopper1997@pr.oxylabs.io:7777'
+])
+const proxyUrl = ipRotator.getNextIP();
+console.log(`Using proxy: ${proxyUrl}`)
+
+const ytdlAgent = ytdl.createProxyAgent({ uri: proxyUrl, agent }, cookies);
 
 // Route base/youtubeMp4
 router.route('/getTitle').post(async (req, res) => {
@@ -269,7 +299,7 @@ router.route('/getTitle').post(async (req, res) => {
         if(!ytdl.validateURL)
             return res.status(500).send("Not a valid link!")
 
-        const info = await ytdl.getInfo(videoUrl, { agent } );
+        const info = await ytdl.getInfo(videoUrl, { ytdlAgent } );
         const title = info.videoDetails.title;
 
         res.status(200).send(title)
@@ -398,17 +428,18 @@ router.route('/downloadMp4').post(async (req, res) => {
 });
 
 router.route('/downloadMp3').post(async (req, res) => {    
-    
     try {
+        const currentProxy = ipRotator.getNextIP();
+        console.log(currentProxy)
         if (!agent) {
             return res.status(500).send("Proxy agent not available");
         }
         const videoUrl = req.body.link;
 
-        if(!ytdl.validateURL(videoUrl, { agent }))
+        if(!ytdl.validateURL(videoUrl, ytdlAgent))
             return res.status(500).send("Invalid YouTube URL")
     
-        const info = await ytdl.getInfo(videoUrl, { agent })
+        const info = await ytdl.getInfo(videoUrl, ytdlAgent)
         const title = info.videoDetails.title;
         console.log(`[MP3] Video successfully obtained: ${title}`)
 
@@ -431,13 +462,12 @@ router.route('/downloadMp3').post(async (req, res) => {
 
 
         console.log("[MP3] Initiating process with ytdl")
-        const ytdlStream = ytdl(videoUrl, { format: mp4Format, agent})
+        const ytdlStream = ytdl(videoUrl, { format: mp4Format, ytdlAgent})
         .on('progress', (chunkLength, downloaded, total) => {
             let percent = (downloaded / total * 100).toFixed(2);
         })
         .on('error', (error) => {
             console.log('[YT>MP3] Error in ytdl', error)
-            cleanup();
             res.status(500).send('Error downloading audio')
         })
         ytdlStream.pipe(audioWriteStream);
@@ -462,6 +492,7 @@ router.route('/downloadMp3').post(async (req, res) => {
 
     } catch (error) {
         if (error.response.status === 429){
+            console.log(error)
             throw new CustomError('Too Many Requests, please try again later.', 429, 'TOO_MANY_REQUEST');
         } else {
             console.log(error)

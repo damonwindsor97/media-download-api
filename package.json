@@ -9,6 +9,7 @@
     "ffmpeg-static": "^5.2.0",
     "http-proxy": "^1.18.1",
     "http-proxy-agent": "^7.0.2",
+    "https": "^1.0.0",
     "https-proxy-agent": "^7.0.5",
     "morgan": "^1.10.0",
     "nodemon": "^3.1.1",
