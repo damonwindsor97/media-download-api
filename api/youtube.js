@@ -491,14 +491,10 @@ router.route('/downloadMp3').post(async (req, res) => {
         });
 
     } catch (error) {
-        if (error.response.status === 429){
-            console.log(error)
-            throw new CustomError('Too Many Requests, please try again later.', 429, 'TOO_MANY_REQUEST');
-        } else {
-            console.log(error)
-            throw new CustomError('Internal Server Error.', 500, 'SERVER_ERROR');
-        }
+        console.error('[YT>MP3] Internal server error:', error);
+        res.status(500).send('Internal server error.');
     }
+    
 })
 
 module.exports = { progressEmitter, youtubeRouter: router };
