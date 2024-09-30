@@ -15,15 +15,7 @@ const ffmpeg = require('ffmpeg-static');
 const EventEmitter = require('events');
 const progressEmitter = new EventEmitter();
 
-const { Agent } = require('https'); 
 
-const agent = new Agent({
-    host: process.env.PROXY_HOST,
-    port: process.env.PROXY_PORT,
-    auth: process.env.PROXY_AUTH,
-    // ignore certificate
-    rejectUnauthorized: false 
-});
 
 const cookies = [
     {
@@ -200,7 +192,7 @@ const cookies = [
 const proxyUrl = process.env.PROXY_URL
 console.log(`Using proxy: ${proxyUrl}`)
 
-const ytdlAgent = ytdl.createProxyAgent({ uri: proxyUrl, agent }, cookies);
+const ytdlAgent = ytdl.createProxyAgent({ uri: proxyUrl }, cookies);
 
 // Route base/youtubeMp4
 router.route('/getTitle').post(async (req, res) => {
