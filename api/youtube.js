@@ -414,12 +414,18 @@ router.route('/downloadMp3').post(async (req, res) => {
     try {
 
         if (!agent) {
-            return res.status(500).send("Proxy agent not available");
+            return res.status(500).json({ error: "Proxy Agent not available", details: "The proxy agent required for the download is not initialized or unavailable." });
         }
         const videoUrl = req.body.link;
+        if (!videoUrl) {
+            console.error('[MP3] No video URL provided');
+            return res.status(400).json({ error: "No video URL provided", details: "Please provide a valid YouTube video URL in the request body." });
+        }
 
-        if(!ytdl.validateURL(videoUrl, ytdlAgent))
-            return res.status(500).send("Invalid YouTube URL")
+        if(!ytdl.validateURL(videoUrl, ytdlAgent)){
+            console.error(`[MP3] Invalid YouTube URL: ${videoUrl}`);
+            return res.status(400).json({ error: "Invalid YouTube URL", details: "The provided URL is not a valid YouTube video URL." });
+        }
     
         const info = await ytdl.getInfo(videoUrl, ytdlAgent)
         const title = info.videoDetails.title;
@@ -428,13 +434,15 @@ router.route('/downloadMp3').post(async (req, res) => {
         const formats = ytdl.filterFormats(info.formats || [], 'audioonly');
         console.log("[MP3] Checking audio formats")
         if (formats.length === 0) {
-            return res.status(400).send("No audio formats found for the provided video");
+            console.error(`[MP3] No audio formats found for video: ${title}`);
+            return res.status(400).json({ error: "No audio formats found", details: "The video does not contain any suitable audio formats for download." });
         }
 
         const mp4Format = formats.find(format => format.container === 'mp4');
 
         if (!mp4Format) {
-            return res.status(400).send("No MP4 format for the provided video");
+            console.error(`[MP3] No MP4 audio format found for video: ${title}`);
+            return res.status(400).json({ error: "No MP4 format available", details: "The video does not have an MP4 audio format available for download." });
         }
         console.log("[MP3] Audio formats found")
 
@@ -449,8 +457,8 @@ router.route('/downloadMp3').post(async (req, res) => {
             let percent = (downloaded / total * 100).toFixed(2);
         })
         .on('error', (error) => {
-            console.log('[YT>MP3] Error in ytdl', error)
-            res.status(500).send('Error downloading audio')
+            console.error(`[MP3] Error in ytdl download for ${title}:`, error);
+            res.status(500).json({ error: 'Error downloading audio', details: error.message });
         })
         ytdlStream.pipe(audioWriteStream);
 
@@ -463,18 +471,23 @@ router.route('/downloadMp3').post(async (req, res) => {
             console.log(`[MP3] Video successfully converted: ${title}`);
             res.download(audioPath, `${encodeURIComponent(title)}.m4a`, (error) => {
                 if (error) {
-                    console.log(error);
-                    res.status(500).send("Error downloading file");
+                    console.error(`[MP3] Error sending file to client for ${title}:`, error);
+                    res.status(500).json({ error: "Error downloading file", details: error.message });
                 } else {
-                    fs.unlinkSync(audioPath);
-                    console.log(`[MP3] File successfully deleted: ${audioPath}`)
+                    fs.unlink(audioPath, (unlinkError) => {
+                        if (unlinkError) {
+                            console.error(`[MP3] Error deleting temporary file ${audioPath}:`, unlinkError);
+                        } else {
+                            console.log(`[MP3] File successfully deleted: ${audioPath}`);
+                        }
+                    });
                 }
             });
         });
 
     } catch (error) {
-        console.error('[YT>MP3] Internal server error:', error);
-        res.status(500).send('Internal server error.', error);
+        console.error('[MP3] Unhandled error:', error);
+        res.status(500).json({ error: 'Internal server error', details: error.message });
     }
     
 })
