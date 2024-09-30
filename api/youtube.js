@@ -196,7 +196,7 @@ const cookies = [
             "storeId": null,
             "value": "tz=Australia.Sydney"
         }
-    ]
+]
 
 const proxyUrl = process.env.PROXY_URL
 console.log(`Using proxy: ${proxyUrl}`)
@@ -211,10 +211,12 @@ router.route('/getTitle').post(async (req, res) => {
         }
 
         const videoUrl = req.body.link;
-        if(!ytdl.validateURL)
-            return res.status(500).send("Not a valid link!")
+        if(!ytdl.validateURL(videoUrl, ytdlAgent)){
+            console.error(`[Title] Invalid YouTube URL: ${videoUrl}`);
+            return res.status(400).json({ error: "Invalid YouTube URL", details: "The provided URL is not a valid YouTube video URL." });
+        }
 
-        const info = await ytdl.getInfo(videoUrl, { ytdlAgent } );
+        const info = await ytdl.getInfo(videoUrl, ytdlAgent)
         const title = info.videoDetails.title;
 
         res.status(200).send(title)
