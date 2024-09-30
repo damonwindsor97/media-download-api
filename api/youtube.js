@@ -28,6 +28,136 @@ const agent = new Agent({
 const cookies = [
     {
         "domain": ".youtube.com",
+        "expirationDate": 1762265242.66526,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "__Secure-3PSID",
+        "path": "/",
+        "sameSite": "no_restriction",
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "g.a000ogjBs48XjnX2G3n7oQ_UimRciMrw46Z-cqh1MAXCB9lOFpOVEKS_tWEt-loa4EO0RYVWFAACgYKAUwSARASFQHGX2MiublJyOZxmji5TRma_-P_-BoVAUF8yKpb2xot8TQfWOPbM3yA0rkm0076"
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1759244858.654453,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "__Secure-1PSIDTS",
+        "path": "/",
+        "sameSite": null,
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "sidts-CjEBQlrA-C2N4YLKC6hdVvLmAiMj0v2jZcywGntqcw_6Jz9sZ7acz3WHw_nNe4x_06UGEAA"
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1762265242.665293,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "SAPISID",
+        "path": "/",
+        "sameSite": null,
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "LgA4jqYZeCGOtP7Q/A8TGm5mv11Msq7oEd"
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1759244971.399207,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "__Secure-1PSIDCC",
+        "path": "/",
+        "sameSite": null,
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "AKEyXzXVaQk1UfC-D_QsBYZ_UdzDYJn1zcixfY_AyAoC6pv5bkSK-T17FPUEDeovFK-vyaT4"
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1762265242.665279,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "SSID",
+        "path": "/",
+        "sameSite": null,
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "AHaIhczHIkSnJKSbS"
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1762265242.665301,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "__Secure-1PAPISID",
+        "path": "/",
+        "sameSite": null,
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "LgA4jqYZeCGOtP7Q/A8TGm5mv11Msq7oEd"
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1762265242.665251,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "__Secure-1PSID",
+        "path": "/",
+        "sameSite": null,
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "g.a000ogjBs48XjnX2G3n7oQ_UimRciMrw46Z-cqh1MAXCB9lOFpOVEZVWjzLvApaG_AWvRo2MJgACgYKAcoSARASFQHGX2MiJN38_rZh-9s2ND1leOMBcxoVAUF8yKpXx4tPjFD9swEINscy6PPd0076"
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1762265242.665308,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "__Secure-3PAPISID",
+        "path": "/",
+        "sameSite": "no_restriction",
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "LgA4jqYZeCGOtP7Q/A8TGm5mv11Msq7oEd"
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1759244971.399224,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "__Secure-3PSIDCC",
+        "path": "/",
+        "sameSite": "no_restriction",
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "AKEyXzX1r4Kw5ezexW3F2Uezkxwvk1Gov6aI6Orf4EIvD_m_RATcpqcsWmePut37D-yrq8JecQ"
+    },
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1759244858.654526,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "__Secure-3PSIDTS",
+        "path": "/",
+        "sameSite": "no_restriction",
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "sidts-CjEBQlrA-C2N4YLKC6hdVvLmAiMj0v2jZcywGntqcw_6Jz9sZ7acz3WHw_nNe4x_06UGEAA"
+    },
+    {
+        "domain": ".youtube.com",
         "expirationDate": 1762265243.356978,
         "hostOnly": false,
         "httpOnly": true,
@@ -39,7 +169,19 @@ const cookies = [
         "storeId": null,
         "value": "AFmmF2swRQIhAJL9JhZ6Ntvo3emb6ZjgPOpw5Bu8wFRxAB_iv7FaCkqUAiAwg7hhJBnVVWrx4k5F3xg6K1mGYZIPe9cPU7eUahp1XQ:QUQ3MjNmd0dkUUk0Wm0zMU1jangxN2xUdE9RNERKTjNlLWhSdTFwUWVVU0hZc19VRFIzRVZ3ODcxbXBUam41blFWQVFuSzZfLWRBdmVnT2hhRGFYNnpXMm5RRUxuOGh6RlFHTGp4MlZqMXo5RG1fYXpleHUxNDJGRXg5Yjd4VFZ5SDdkMkVxaVRrVG1LUmJpUktKSndtZjFFMVRiWHY1R21B"
     },
-
+    {
+        "domain": ".youtube.com",
+        "expirationDate": 1762265249.670617,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "PREF",
+        "path": "/",
+        "sameSite": null,
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "tz=Australia.Sydney"
+    }
 ]
 
 const proxyUrl = process.env.PROXY_URL
