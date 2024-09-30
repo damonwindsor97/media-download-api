@@ -45,7 +45,15 @@ const cookies = [
 const proxyUrl = process.env.PROXY_URL
 console.log(`Using proxy: ${proxyUrl}`)
 
-const ytdlAgent = ytdl.createProxyAgent({ uri: proxyUrl }, cookies);
+const ytdlAgent = ytdl.createProxyAgent({ 
+    uri: proxyUrl,
+    headers: {
+        'User-Agent': 'Your User Agent',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Referer': 'https://www.youtube.com/',
+        'Cookie': cookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ')
+    }
+});
 
 // Route base/youtubeMp4
 router.route('/getTitle').post(async (req, res) => {
