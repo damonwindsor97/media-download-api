@@ -15,7 +15,15 @@ const ffmpeg = require('ffmpeg-static');
 const EventEmitter = require('events');
 const progressEmitter = new EventEmitter();
 
+const { Agent } = require('https'); 
 
+const agent = new Agent({
+    host: process.env.PROXY_HOST,
+    port: process.env.PROXY_PORT,
+    auth: process.env.PROXY_AUTH,
+    // ignore certificate
+    rejectUnauthorized: false 
+});
 
 const cookies = [
     {
