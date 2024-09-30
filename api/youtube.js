@@ -4,13 +4,13 @@ const router = express.Router();
 const fs = require('fs')
 const path = require('path')
 const cp = require('child_process')
+require('dotenv').config();
 
 // We are using a variant of ytdl-core that has quick fixes before the main repo implements them
 // Once change is made to main repo, we can then install and replace ytdl-core where the @distube is instead 
 const ytdl = require('@distube/ytdl-core')
 const ffmpeg = require('ffmpeg-static');
 
-const {CustomError}  = require('../middleware/errorHandler')
 
 const EventEmitter = require('events');
 const progressEmitter = new EventEmitter();
@@ -18,9 +18,9 @@ const progressEmitter = new EventEmitter();
 const { Agent } = require('https'); 
 
 const agent = new Agent({
-    host: 'pr.oxylabs.io',
-    port: 7777,
-    auth: 'customer-damonwindsor97_AiLaW:Chopper1997',
+    host: process.env.PROXY_HOST,
+    port: process.env.PROXY_PORT,
+    auth: process.env.PROXY_AUTH,
     // ignore certificate
     rejectUnauthorized: false 
 });
@@ -266,24 +266,7 @@ const cookies = [
     }
 ]
 
-// We dont really need this, this was made to go through multiple proxies - but now it seems the functions wont work without it, even though it isnt needed... hm.
-class IPRotator {
-    constructor(ips) {
-        this.ips = ips;
-        this.currentIndex = 0;
-    }
-
-    getNextIP() {
-        const ip = this.ips[this.currentIndex];
-        this.currentIndex = (this.currentIndex + 1) % this.ips.length;
-        return ip
-    }
-}
-
-const ipRotator = new IPRotator([
-    'http://customer-damonwindsor97_AiLaW:Chopper1997@pr.oxylabs.io:7777'
-])
-const proxyUrl = ipRotator.getNextIP();
+const proxyUrl = process.env.PROXY_URL
 console.log(`Using proxy: ${proxyUrl}`)
 
 const ytdlAgent = ytdl.createProxyAgent({ uri: proxyUrl, agent }, cookies);
@@ -429,8 +412,7 @@ router.route('/downloadMp4').post(async (req, res) => {
 
 router.route('/downloadMp3').post(async (req, res) => {    
     try {
-        const currentProxy = ipRotator.getNextIP();
-        console.log(currentProxy)
+
         if (!agent) {
             return res.status(500).send("Proxy agent not available");
         }
@@ -492,7 +474,7 @@ router.route('/downloadMp3').post(async (req, res) => {
 
     } catch (error) {
         console.error('[YT>MP3] Internal server error:', error);
-        res.status(500).send('Internal server error.');
+        res.status(500).send('Internal server error.', error);
     }
     
 })
