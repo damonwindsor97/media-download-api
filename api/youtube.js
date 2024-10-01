@@ -273,7 +273,7 @@ const ytdlOptions = {
     requestOptiona: {
         agent,
         headers: {
-            'Cookie': cookieString
+            'Cookie': cookies
         }
     }
 }
