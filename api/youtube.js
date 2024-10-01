@@ -201,7 +201,12 @@ const agent = new HttpProxyAgent(proxyUrl, {
 })
 
 // Create an undici client with the proxy agent
-const client = new Client('http://localhost', {
+// const client = new Client('http://localhost', {
+//     dispatcher: {
+//         connect: agent,
+//     },
+// });
+const client = new Client('https://www.youtube.com', {
     dispatcher: {
         connect: agent,
     },
