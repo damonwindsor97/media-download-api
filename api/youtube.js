@@ -15,13 +15,14 @@ const EventEmitter = require('events');
 const progressEmitter = new EventEmitter();
 
 const { HttpProxyAgent  } = require('http-proxy-agent');
+const { Client } = require('undici');
 
 const rejectUnauthorized = false;
 
 const proxyUrl = process.env.PROXY_URL
 console.log(`Using proxy: ${proxyUrl}`)
 
-const cookies = [
+const cookiesArray  = [
     {
         "domain": ".youtube.com",
         "expirationDate": 1762330448.303,
@@ -191,18 +192,27 @@ const cookies = [
         "storeId": null,
         "value": "tz=Australia.Sydney"
     }
-]
+];
+
+const cookies = cookiesArray.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');
 
 const agent = new HttpProxyAgent(proxyUrl, {
     rejectUnauthorized,
-}, cookies)
+})
+
+// Create an undici client with the proxy agent
+const client = new Client('http://localhost', {
+    dispatcher: {
+        connect: agent,
+    },
+});
 
 const ytdlOptions = {
-    requestOptiona: {
+    requestOptions: {
         cookies,
-        agent,
+        client,
     }
-}
+};
 
 // Route base/youtubeMp4
 router.route('/getTitle').post(async (req, res) => {
@@ -358,7 +368,7 @@ router.route('/downloadMp3').post(async (req, res) => {
         }
 
         // Get video info
-        const info = await ytdl.getInfo(videoUrl);
+        const info = await ytdl.getInfo(videoUrl, ytdlOptions);
         const title = info.videoDetails.title;
         console.log(`[MP3] Video obtained: ${title}`);
 
@@ -375,13 +385,13 @@ router.route('/downloadMp3').post(async (req, res) => {
             return res.status(400).json({ error: "No MP4 format available" });
         }
 
-        // Create write stream
+        // Create write stream & place for our temp file, also a name
         const audioPath = path.join(process.cwd(), "temp", `${encodeURIComponent(title)}.m4a`);
         const audioWriteStream = fs.createWriteStream(audioPath);
 
         // Initiate download
         console.log("[MP3] Starting download...");
-        const ytdlStream = ytdl(videoUrl, { format: mp4Format })
+        const ytdlStream = ytdl(videoUrl, { format: mp4Format, ...ytdlOptions })
             .on('progress', (chunkLength, downloaded, total) => {
                 console.log(`[MP3] Downloaded ${downloaded} of ${total}`);
             })
