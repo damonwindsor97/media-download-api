@@ -11,19 +11,15 @@ require('dotenv').config();
 const ytdl = require('@distube/ytdl-core')
 const ffmpeg = require('ffmpeg-static');
 
-
 const EventEmitter = require('events');
 const progressEmitter = new EventEmitter();
 
-const { Agent } = require('https'); 
+const { HttpProxyAgent  } = require('http-proxy-agent');
 
-const agent = new Agent({
-    host: process.env.PROXY_HOST,
-    port: process.env.PROXY_PORT,
-    auth: process.env.PROXY_AUTH,
-    // ignore certificate
-    rejectUnauthorized: false 
-});
+const rejectUnauthorized = false;
+
+const proxyUrl = process.env.PROXY_URL
+console.log(`Using proxy: ${proxyUrl}`)
 
 const cookies = [
     {
@@ -266,33 +262,33 @@ const cookies = [
     }
 ]
 
-const proxyUrl = process.env.PROXY_URL
-console.log(`Using proxy: ${proxyUrl}`)
+const cookieString = cookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');
 
-const ytdlAgent = ytdl.createProxyAgent({ 
-    uri: proxyUrl,
-    headers: {
-        'User-Agent': 'Your User Agent',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Referer': 'https://www.youtube.com/',
-        'Cookie': cookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ')
+
+const agent = new HttpProxyAgent(proxyUrl, {
+    rejectUnauthorized,
+})
+
+const ytdlOptions = {
+    requestOptiona: {
+        agent,
+        headers: {
+            'Cookie': cookieString
+        }
     }
-});
+}
 
 // Route base/youtubeMp4
 router.route('/getTitle').post(async (req, res) => {
     try {
-        if (!agent) {
-            return res.status(500).send("Proxy agent not available");
-        }
 
         const videoUrl = req.body.link;
-        if(!ytdl.validateURL(videoUrl, {ytdlAgent})){
+        if(!ytdl.validateURL(videoUrl, ytdlOptions)){
             console.error(`[Title] Invalid YouTube URL: ${videoUrl}`);
             return res.status(400).json({ error: "Invalid YouTube URL", details: "The provided URL is not a valid YouTube video URL." });
         }
 
-        const info = await ytdl.getInfo(videoUrl, {ytdlAgent})
+        const info = await ytdl.getInfo(videoUrl, ytdlOptions)
         const title = info.videoDetails.title;
 
         res.status(200).send(title)
@@ -422,73 +418,71 @@ router.route('/downloadMp4').post(async (req, res) => {
 
 router.route('/downloadMp3').post(async (req, res) => {    
     try {
-
-        if (!agent) {
-            return res.status(500).json({ error: "Proxy Agent not available", details: "The proxy agent required for the download is not initialized or unavailable." });
-        }
         const videoUrl = req.body.link;
+
+        // Validate video URL
         if (!videoUrl) {
             console.error('[MP3] No video URL provided');
-            return res.status(400).json({ error: "No video URL provided", details: "Please provide a valid YouTube video URL in the request body." });
+            return res.status(400).json({ error: "No video URL provided" });
         }
 
-        if(!ytdl.validateURL(videoUrl, {ytdlAgent})){
+        if (!ytdl.validateURL(videoUrl)) {
             console.error(`[MP3] Invalid YouTube URL: ${videoUrl}`);
-            return res.status(400).json({ error: "Invalid YouTube URL", details: "The provided URL is not a valid YouTube video URL." });
+            return res.status(400).json({ error: "Invalid YouTube URL" });
         }
-    
-        const info = await ytdl.getInfo(videoUrl, {ytdlAgent})
+
+        // Get video info
+        const info = await ytdl.getInfo(videoUrl);
         const title = info.videoDetails.title;
-        console.log(`[MP3] Video successfully obtained: ${title}`)
+        console.log(`[MP3] Video obtained: ${title}`);
 
-        const formats = ytdl.filterFormats(info.formats || [], 'audioonly');
-        console.log("[MP3] Checking audio formats")
-        if (formats.length === 0) {
+        // Filter audio formats
+        const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
+        if (audioFormats.length === 0) {
             console.error(`[MP3] No audio formats found for video: ${title}`);
-            return res.status(400).json({ error: "No audio formats found", details: "The video does not contain any suitable audio formats for download." });
+            return res.status(400).json({ error: "No audio formats found" });
         }
 
-        const mp4Format = formats.find(format => format.container === 'mp4');
-
+        const mp4Format = audioFormats.find(format => format.container === 'mp4');
         if (!mp4Format) {
             console.error(`[MP3] No MP4 audio format found for video: ${title}`);
-            return res.status(400).json({ error: "No MP4 format available", details: "The video does not have an MP4 audio format available for download." });
+            return res.status(400).json({ error: "No MP4 format available" });
         }
-        console.log("[MP3] Audio formats found")
 
-        console.log("[MP3] Creating WriteStream")
-        const audioPath = path.join(process.cwd(), "temp", `${encodeURI(title)}.m4a`);
+        // Create write stream
+        const audioPath = path.join(process.cwd(), "temp", `${encodeURIComponent(title)}.m4a`);
         const audioWriteStream = fs.createWriteStream(audioPath);
 
+        // Initiate download
+        console.log("[MP3] Starting download...");
+        const ytdlStream = ytdl(videoUrl, { format: mp4Format })
+            .on('progress', (chunkLength, downloaded, total) => {
+                console.log(`[MP3] Downloaded ${downloaded} of ${total}`);
+            })
+            .on('error', (error) => {
+                console.error(`[MP3] Download error for ${title}:`, error);
+                return res.status(500).json({ error: 'Error downloading audio', details: error.message });
+            });
 
-        console.log("[MP3] Initiating process with ytdl")
-        const ytdlStream = ytdl(videoUrl, { format: mp4Format, ytdlAgent})
-        .on('progress', (chunkLength, downloaded, total) => {
-            let percent = (downloaded / total * 100).toFixed(2);
-        })
-        .on('error', (error) => {
-            console.error(`[MP3] Error in ytdl download for ${title}:`, error);
-            res.status(500).json({ error: 'Error downloading audio', details: error.message });
-        })
         ytdlStream.pipe(audioWriteStream);
 
+        // Set response headers for download
         res.set({
-            'Content-Disposition': `attachment; filename="${encodeURIComponent(title)}.m4a"`, // Change filename extension to .mp3 | m4a so MacOS likes it
+            'Content-Disposition': `attachment; filename="${encodeURIComponent(title)}.m4a"`,
             'Content-Type': 'audio/mp4',
         });
 
         audioWriteStream.on('finish', () => {
-            console.log(`[MP3] Video successfully converted: ${title}`);
+            console.log(`[MP3] Download finished: ${title}`);
             res.download(audioPath, `${encodeURIComponent(title)}.m4a`, (error) => {
                 if (error) {
                     console.error(`[MP3] Error sending file to client for ${title}:`, error);
-                    res.status(500).json({ error: "Error downloading file", details: error.message });
                 } else {
                     fs.unlink(audioPath, (unlinkError) => {
                         if (unlinkError) {
-                            console.error(`[MP3] Error deleting temporary file ${audioPath}:`, unlinkError);
+                            console.error(`[MP3] Error deleting temporary file:`, unlinkError);
                         } else {
-                            console.log(`[MP3] File successfully deleted: ${audioPath}`);
+                            console.log(`[MP3] Temporary file deleted: ${audioPath}`);
                         }
                     });
                 }
@@ -499,7 +493,6 @@ router.route('/downloadMp3').post(async (req, res) => {
         console.error('[MP3] Unhandled error:', error);
         res.status(500).json({ error: 'Internal server error', details: error.message });
     }
-    
-})
+});
 
 module.exports = { progressEmitter, youtubeRouter: router };
