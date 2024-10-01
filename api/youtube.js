@@ -199,10 +199,8 @@ const agent = new HttpProxyAgent(proxyUrl, {
 
 const ytdlOptions = {
     requestOptiona: {
+        cookies,
         agent,
-        headers: {
-            'Cookie': cookies
-        }
     }
 }
 
