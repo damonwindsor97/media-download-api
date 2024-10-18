@@ -1,41 +1,11 @@
 const express = require('express');
 const cors = require('cors');
-const morgan = require('morgan')
-const fs = require('fs')
-const path = require('path')
-const http = require('http')
-const { Server } = require('socket.io');
-const { youtubeRouter, progressEmitter } = require("./api/youtube.js");
+const morgan = require('morgan');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
-const server = http.createServer(app);
 
-const io = new Server(server, {
-    //  LOCAL TESTING -------------------
-    // cors: {
-    //   origin: "http://localhost:5173",  
-    //   methods: ["GET", "POST"],
-    //   credentials: true
-    // }
-
-
-    // cors: {
-    //     origin: "https://dev-linkify-gg.onrender.com",  
-    //     methods: ["GET", "POST"],
-    //     credentials: true
-    // }
-  
-
-    // LIVE ----------------------
-    cors: {
-      origin: "https://linkify.gg",  
-      methods: ["GET", "POST"],
-      credentials: true
-
-    }
-  
-})
-  
 app.use(cors({ 
 origin: "*",  
 methods: ["GET", "POST"],
@@ -55,37 +25,10 @@ if (!fs.existsSync(tempDir)) {
     console.log('Temp directory created successfully.');
 }
 
-app.use("/youtube", youtubeRouter);
-
-const soundcloudRoutes = require('./api/soundcloud.js')
-app.use("/soundcloud", soundcloudRoutes)
-
-const spotifyRoutes = require('./api/spotify.js');
-app.use("/spotify", spotifyRoutes)
-
-// Progress Bar Emitter Jazz
-io.on('connection', (socket) => {
-    console.log('A client connected');
-
-    const progressListener = (percent) => {
-        socket.emit('downloadProgress', percent);
-    };
-
-    const completeListener = () => {
-        socket.emit('downloadComplete');
-    };
-
-    progressEmitter.on('progress', progressListener);
-    progressEmitter.on('complete', completeListener);
-
-    socket.on('disconnect', () => {
-        progressEmitter.off('progress', progressListener);
-        progressEmitter.off('complete', completeListener);
-        console.log('A client disconnected');
-    });
-});
+const routes = require('./routes/routes.js')
+app.use('/api', routes());
 
 const port = process.env.PORT || 5000;
-server.listen(port, function () {
+app.listen(port, function () {
     console.log(`Server started on port: ${port}`);
 });
