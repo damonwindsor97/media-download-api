@@ -64,7 +64,7 @@ module.exports = {
             audioWriteStream.on('finish', () => {
                 console.log(`[SC] Audio converting: ${title}`);
             
-                res.download(audioPath, `${title}.mp3`, (error) => {
+                res.download(audioPath, `${title}.m4a`, (error) => {
                     if (error) {
                         console.log(error);
                         res.status(500).send("Error downloading file");
