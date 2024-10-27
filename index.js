@@ -6,14 +6,11 @@ const urlController = require('./controllers/urlController.js')
 
 const app = express();
 
-// Configure CORS for production
 app.use(cors({ 
-    origin: process.env.NODE_ENV === 'production' 
-        ? 'https://linkify.gg'
-        : '*',
+    origin: "*",  
     methods: ["GET", "POST"],
     credentials: true
-}));
+    }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
