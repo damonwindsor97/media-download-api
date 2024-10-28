@@ -1,7 +1,10 @@
 const axios = require('axios')
 const URL = require('../server/models/Urls')
 
-const short = require('short-uuid');
+const { customAlphabet } = require('nanoid-cjs');
+const nanoid = customAlphabet('1234567890abcdef', 10);
+
+const shortId = nanoid();
 
 module.exports = {
 
@@ -58,7 +61,7 @@ module.exports = {
     
             // Create new short URL
             console.log('Creating new slug/short url')
-            const slug = short.generate();
+            const slug = shortId;
             const newUrl = await URL.create({
                 originalUrl: req.body.url,
                 slug: slug,
