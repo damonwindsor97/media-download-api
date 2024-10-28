@@ -31,9 +31,11 @@ module.exports = {
         }
     
         try {
+            console.log('Checking to see if URL exists in db')
             // First check if URL already exists
             let url = await URL.findOne({ originalUrl: req.body.url }).exec();
             if (url) {
+                console.log('URL found in db, sending to user')
                 return res.json({
                     short: `${process.env.URL.replace(/\/$/, '')}/${url.slug}`,
                     originalUrl: url.originalUrl
@@ -41,6 +43,7 @@ module.exports = {
             }
     
             // Validate the target URL / see if the link is legit
+            console.log('Seeing if URL is live')
             const response = await axios.get(req.body.url.toString(), {
                 validateStatus: (status) => status < 500,
                 timeout: 5000
@@ -54,6 +57,7 @@ module.exports = {
             }
     
             // Create new short URL
+            console.log('Creating new slug/short url')
             const slug = short.generate();
             const newUrl = await URL.create({
                 originalUrl: req.body.url,
@@ -100,9 +104,8 @@ module.exports = {
             res.set('Pragma', 'no-cache');
             res.set('Expires', '0');
             
-            // Return the redirected URL in the response
-            return res.json({ redirectUrl });
-
+            // Perform the redirect
+            return res.redirect(301, redirectUrl);
         } catch (error) {
             console.error('Error in getSlug:', error);
             next(error);
