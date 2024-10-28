@@ -3,8 +3,6 @@ const URL = require('../server/models/Urls')
 
 const short = require('short-uuid');
 
-const uuid = short.generate();
-
 module.exports = {
 
     async testCallback(res, req, next) {
@@ -42,10 +40,10 @@ module.exports = {
                 });
             }
     
-            // Validate the target URL
+            // Validate the target URL / see if the link is legit
             const response = await axios.get(req.body.url.toString(), {
                 validateStatus: (status) => status < 500,
-                timeout: 5000 // 5 second timeout
+                timeout: 5000
             });
     
             if (response.status === 404) {
@@ -62,7 +60,8 @@ module.exports = {
                 slug: slug,
                 createdAt: new Date()
             });
-    
+            
+            // return the response in JSON, containing the short link, OGlink and link status
             return res.json({
                 short: `${process.env.URL.replace(/\/$/, '')}/${newUrl.slug}`,
                 originalUrl: newUrl.originalUrl,
@@ -78,6 +77,7 @@ module.exports = {
     async getSlug(req, res, next) {
         console.log('Accessing slug:', req.params.slug);
         try {
+            // queries the database for a URL object that matches the given slug
             const url = await URL.findOne({ slug: req.params.slug }).exec();
             console.log('Found URL:', url);
             
@@ -89,6 +89,7 @@ module.exports = {
             console.log('Redirecting to:', url.originalUrl);
             
             // Ensure URL has proper protocol
+            // Iff OG URL is found, prepares to redirect by checking if URL has valid protocol
             let redirectUrl = url.originalUrl;
             if (!redirectUrl.startsWith('http://') && !redirectUrl.startsWith('https://')) {
                 redirectUrl = 'https://' + redirectUrl;
