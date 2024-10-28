@@ -1,46 +1,16 @@
 const express = require('express');
 const cors = require('cors');
-const morgan = require('morgan')
-const fs = require('fs')
-const path = require('path')
-const http = require('http')
-const { Server } = require('socket.io');
-const { youtubeRouter, progressEmitter } = require("./api/youtube.js");
+const morgan = require('morgan');
+const mongoose = require('mongoose');
+const urlController = require('./controllers/urlController.js')
 
 const app = express();
-const server = http.createServer(app);
 
-const io = new Server(server, {
-    //  LOCAL TESTING -------------------
-    // cors: {
-    //   origin: "http://localhost:5173",  
-    //   methods: ["GET", "POST"],
-    //   credentials: true
-    // }
-
-
-    // cors: {
-    //     origin: "https://dev-linkify-gg.onrender.com",  
-    //     methods: ["GET", "POST"],
-    //     credentials: true
-    // }
-  
-
-    // LIVE ----------------------
-    cors: {
-      origin: "https://linkify.gg",  
-      methods: ["GET", "POST"],
-      credentials: true
-
-    }
-  
-})
-  
 app.use(cors({ 
-origin: "*",  
-methods: ["GET", "POST"],
-credentials: true
-}));
+    origin: "*",  
+    methods: ["GET", "POST"],
+    credentials: true
+    }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -48,44 +18,44 @@ app.use(morgan('dev'));
 
 require('dotenv').config();
 
-// Ensure the existence of the temp directory
-const tempDir = path.join(__dirname, 'temp');
-if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir);
-    console.log('Temp directory created successfully.');
-}
+// Database connection
+const connectToMongo = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log('MongoDB Connected to:', mongoose.connection.db.databaseName);
+    } catch (error) {
+        console.error('MongoDB connection error:', error);
+        process.exit(1);
+    }
+};
+connectToMongo();
 
-app.use("/youtube", youtubeRouter);
+// Health check route
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'OK' });
+});
 
-const soundcloudRoutes = require('./api/soundcloud.js')
-app.use("/soundcloud", soundcloudRoutes)
+// API routes
+const routes = require('./routes/routes.js');
+app.use('/api', routes());
 
-const spotifyRoutes = require('./api/spotify.js');
-app.use("/spotify", spotifyRoutes)
+// Redirect route - This must be after API routes
+app.get('/:slug', urlController.getSlug);
 
-// Progress Bar Emitter Jazz
-io.on('connection', (socket) => {
-    console.log('A client connected');
 
-    const progressListener = (percent) => {
-        socket.emit('downloadProgress', percent);
-    };
+app.use((req, res) => {
+    res.status(404).send('Page not found');
+});
 
-    const completeListener = () => {
-        socket.emit('downloadComplete');
-    };
-
-    progressEmitter.on('progress', progressListener);
-    progressEmitter.on('complete', completeListener);
-
-    socket.on('disconnect', () => {
-        progressEmitter.off('progress', progressListener);
-        progressEmitter.off('complete', completeListener);
-        console.log('A client disconnected');
-    });
+// Error handler
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(500).send('Internal Server Error');
 });
 
 const port = process.env.PORT || 5000;
-server.listen(port, function () {
-    console.log(`Server started on port: ${port}`);
+app.listen(port, () => {
+    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode`);
+    console.log(`Base URL: ${process.env.URL}`);
+    console.log(`Server listening on port ${port}`);
 });

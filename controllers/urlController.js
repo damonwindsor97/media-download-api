@@ -102,6 +102,7 @@ module.exports = {
             
             // Return the redirected URL in the response
             return res.json({ redirectUrl });
+
         } catch (error) {
             console.error('Error in getSlug:', error);
             next(error);
