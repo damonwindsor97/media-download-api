@@ -85,7 +85,6 @@ module.exports = {
     
             console.log('Making Request')
             const response = await axios.request(options);
-            console.log(response.data.adaptiveFormats)
             const title = encodeURIComponent(response.data.title);
     
             // Get highest quality audio and video streams
