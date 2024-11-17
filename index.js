@@ -3,6 +3,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 const urlController = require('./controllers/urlController.js')
+const fs = require('fs')
+const path = require('path')
 
 const app = express();
 
@@ -17,6 +19,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
 require('dotenv').config();
+
+// Making sure we have a temp folder
+const tempDir = path.join(__dirname, 'temp');
+if(!fs.existsSync(tempDir)){
+    fs.mkdirSync(tempDir);
+    console.log('Temp directory successfully created')
+}
 
 // Database connection
 const connectToMongo = async () => {

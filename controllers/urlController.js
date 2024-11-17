@@ -60,7 +60,7 @@ module.exports = {
             }
     
             // Create new short URL
-            console.log('Creating new slug/short url')
+            console.log('Creating new slug/short url id')
             const slug = shortId;
             const newUrl = await URL.create({
                 originalUrl: req.body.url,
@@ -68,7 +68,7 @@ module.exports = {
                 createdAt: new Date()
             });
             
-            // return the response in JSON, containing the short link, OGlink and link status
+            // return the response in JSON, containing the short link which contains our server URL & the slug, OGlink and link status
             return res.json({
                 short: `${process.env.URL.replace(/\/$/, '')}/${newUrl.slug}`,
                 originalUrl: newUrl.originalUrl,
