@@ -83,7 +83,7 @@ module.exports = {
                 }
             };
     
-            console.log('Making Request')
+            console.log('Making Request...')
             const response = await axios.request(options);
             const title = encodeURIComponent(response.data.title);
     
@@ -98,12 +98,8 @@ module.exports = {
                 throw new Error('Could not find compatible audio and video streams');
             }
     
-            const tempDir = path.join(__dirname, 'temp');
-            // Ensure temp directory exists
-            fs.mkdirSync(tempDir, { recursive: true });
-    
+            const tempDir = path.join(process.cwd(), 'temp');
             const outputPath = path.join(tempDir, `${title}${Date.now()}.mp4`);
-
     
             console.log('[YT>MP4] Beginning ffmpeg process')
             // Use ffmpeg to combine audio and video streams
@@ -119,27 +115,27 @@ module.exports = {
                 console.log(`ffmpeg stderr: ${data}`);
             });
     
-            ffmpegProcess.on('close', (code) => {
-                console.log(`[YT>MP4] ffmpeg process closed with code ${code}`);
-                if (code === 0) {
-                    console.log(`[YT>MP4] Video successfully converted: ${title}`);
-                    res.download(outputPath, `${title}.mp4`, (error) => {
-                        if (error) {
-                            console.log(error);
-                            res.status(500).send("Error downloading file", error);
-                        } else {
-                            console.log(`[YT>MP4] Audio converted: ${title}`);
-                            fs.unlinkSync(outputPath);
-                            console.log(`[YT>MP4] File successfully deleted: ${outputPath}`)
-                        }
-
-                    });
+        // Listen for ffmpeg process close event
+        ffmpegProcess.on('close', () => {
+            console.log(`[MP4] Video successfully converted: ${title}`);
+        
+            // After ffmpegProcess is finished, send the file to the client
+            res.download(outputPath, `${title}.mp4`, (error) => {
+                if (error) {
+                    console.error('[MP4] Download error:', error);
+                    res.status(500).send('Error downloading file', error);
                 } else {
-                    console.error(`[YT>MP4] ffmpeg process exited with code ${code}`);
-                    res.status(500).send('Error processing video');
-                    cleanup();
+                    // Delete the temp video file after successful download
+                    fs.unlink(outputPath, (error) => {
+                        if (error) {
+                            console.error('[MP4] Error deleting file:', error);
+                        } else {
+                            console.log('[MP4] File deleted:', outputPath);
+                        }
+                    });
                 }
             });
+        });
     
             ffmpegProcess.on('error', (error) => {
                 console.error('[YT>MP4] ffmpegProcess error:', error);
