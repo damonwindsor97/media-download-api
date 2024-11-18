@@ -53,21 +53,12 @@ module.exports = {
             if (ffmpegProcess) {
                 ffmpegProcess.kill('SIGKILL');
             }
-        
+
             cleanupFiles.forEach(file => {
-                // Add check to only attempt unlink if file exists
-                if (fs.existsSync(file)) {
-                    fs.unlink(file, (error) => {
-                        if (error) {
-                            // Only log if it's not a "file not found" error
-                            if (error.code !== 'ENOENT') {
-                                console.error(`Error deleting file ${file}:`, error);
-                            }
-                        } else {
-                            console.log(`File deleted: ${file}`);
-                        }
-                    });
-                }
+                fs.unlink(file, (error) => {
+                    if (error) console.error(`Error deleting file ${file}:`, error);
+                    else console.log(`File deleted: ${file}`);
+                });
             });
         };
     
@@ -107,7 +98,7 @@ module.exports = {
                 throw new Error('Could not find compatible audio and video streams');
             }
     
-            const tempDir = path.join(process.cwd(), 'temp');
+            const tempDir = path.join(__dirname, 'temp');
             // Ensure temp directory exists
             fs.mkdirSync(tempDir, { recursive: true });
     
