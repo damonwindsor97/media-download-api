@@ -53,7 +53,7 @@ module.exports = {
             if (ffmpegProcess) {
                 ffmpegProcess.kill('SIGKILL');
             }
-            
+
             cleanupFiles.forEach(file => {
                 fs.unlink(file, (error) => {
                     if (error) console.error(`Error deleting file ${file}:`, error);
@@ -104,10 +104,10 @@ module.exports = {
                 fs.mkdirSync(tempDir, { recursive: true });
             }
     
-            const outputPath = path.join(tempDir, `${title}.mp4`);
+            const outputPath = path.join(tempDir, `${title}${Date.now()}.mp4`);
             cleanupFiles.push(outputPath);
     
-            console.log('Beginning ffmpeg process')
+            console.log('[YT>MP4] Beginning ffmpeg process')
             // Use ffmpeg to combine audio and video streams
             ffmpegProcess = cp.spawn(ffmpeg, [
                 '-i', videoFormat.url,
@@ -127,10 +127,14 @@ module.exports = {
                     console.log(`[YT>MP4] Video successfully converted: ${title}`);
                     res.download(outputPath, `${title}.mp4`, (error) => {
                         if (error) {
-                            console.error('[YT>MP4] Download error:', error);
-                            res.status(500).send('Error downloading file');
+                            console.log(error);
+                            res.status(500).send("Error downloading file");
+                        } else {
+                            console.log(`[YT>MP4] Audio converted: ${title}`);
+                            fs.unlinkSync(outputPath);
+                            console.log(`[YT>MP4] File successfully deleted: ${outputPath}`)
                         }
-                        cleanup();
+
                     });
                 } else {
                     console.error(`[YT>MP4] ffmpeg process exited with code ${code}`);
