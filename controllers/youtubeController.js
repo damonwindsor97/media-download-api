@@ -53,12 +53,21 @@ module.exports = {
             if (ffmpegProcess) {
                 ffmpegProcess.kill('SIGKILL');
             }
-
+        
             cleanupFiles.forEach(file => {
-                fs.unlink(file, (error) => {
-                    if (error) console.error(`Error deleting file ${file}:`, error);
-                    else console.log(`File deleted: ${file}`);
-                });
+                // Add check to only attempt unlink if file exists
+                if (fs.existsSync(file)) {
+                    fs.unlink(file, (error) => {
+                        if (error) {
+                            // Only log if it's not a "file not found" error
+                            if (error.code !== 'ENOENT') {
+                                console.error(`Error deleting file ${file}:`, error);
+                            }
+                        } else {
+                            console.log(`File deleted: ${file}`);
+                        }
+                    });
+                }
             });
         };
     
