@@ -103,7 +103,7 @@ module.exports = {
             fs.mkdirSync(tempDir, { recursive: true });
     
             const outputPath = path.join(tempDir, `${title}${Date.now()}.mp4`);
-            cleanupFiles.push(outputPath);
+
     
             console.log('[YT>MP4] Beginning ffmpeg process')
             // Use ffmpeg to combine audio and video streams
