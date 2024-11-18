@@ -99,7 +99,13 @@ module.exports = {
             }
     
             const tempDir = path.join(process.cwd(), 'temp');
-            const outputPath = path.join(tempDir, `${title}${Date.now()}.mp4`);
+            if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir);
+            }
+
+            const sanitizedTitle = title.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
+            const outputPath = path.join(tempDir, `${sanitizedTitle}${Date.now()}.mp4`);
+            console.log(`[MP4] Output path: ${outputPath}`);
     
             console.log('[YT>MP4] Beginning ffmpeg process')
             // Use ffmpeg to combine audio and video streams
@@ -112,30 +118,47 @@ module.exports = {
             ]);
     
             ffmpegProcess.stderr.on('data', (data) => {
-                console.log(`ffmpeg stderr: ${data}`);
+                console.error(`ffmpeg stderr: ${data.toString()}`);
             });
-    
-        // Listen for ffmpeg process close event
-        ffmpegProcess.on('close', () => {
-            console.log(`[MP4] Video successfully converted: ${title}`);
-        
-            // After ffmpegProcess is finished, send the file to the client
-            res.download(outputPath, `${title}.mp4`, (error) => {
-                if (error) {
-                    console.error('[MP4] Download error:', error);
-                    res.status(500).send('Error downloading file', error);
-                } else {
-                    // Delete the temp video file after successful download
-                    fs.unlink(outputPath, (error) => {
-                        if (error) {
-                            console.error('[MP4] Error deleting file:', error);
-                        } else {
-                            console.log('[MP4] File deleted:', outputPath);
-                        }
-                    });
+            
+            ffmpegProcess.stdout.on('data', (data) => {
+                console.log(`ffmpeg stdout: ${data.toString()}`);
+            });
+            
+            ffmpegProcess.on('exit', (code) => {
+                if (code !== 0) {
+                    console.error(`ffmpeg process exited with code ${code}`);
+                    res.status(500).send('Error during video conversion');
                 }
             });
-        });
+    
+            // Listen for ffmpeg process close event
+            ffmpegProcess.on('close', () => {
+                console.log(`[MP4] Video successfully converted: ${title}`);
+                
+                // Ensure the file exists before downloading
+                fs.access(outputPath, fs.constants.F_OK, (err) => {
+                    if (err) {
+                        console.error('[MP4] Output file not found:', outputPath);
+                        res.status(500).send('Error: Converted file not found');
+                    } else {
+                        res.download(outputPath, `${sanitizedTitle}.mp4`, (downloadError) => {
+                            if (downloadError) {
+                                console.error('[MP4] Download error:', downloadError);
+                                res.status(500).send('Error downloading file');
+                            } else {
+                                fs.unlink(outputPath, (unlinkError) => {
+                                    if (unlinkError) {
+                                        console.error('[MP4] Error deleting file:', unlinkError);
+                                    } else {
+                                        console.log('[MP4] File deleted:', outputPath);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            });
     
             ffmpegProcess.on('error', (error) => {
                 console.error('[YT>MP4] ffmpegProcess error:', error);

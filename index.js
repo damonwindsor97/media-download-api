@@ -26,6 +26,7 @@ if(!fs.existsSync(tempDir)){
     fs.mkdirSync(tempDir);
     console.log('Temp directory successfully created')
 }
+console.log(`Temp directory: ${tempDir}`);
 
 // Database connection
 const connectToMongo = async () => {
