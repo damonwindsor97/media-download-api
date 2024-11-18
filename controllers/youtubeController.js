@@ -54,6 +54,12 @@ module.exports = {
                 ffmpegProcess.kill('SIGKILL');
             }
 
+            cleanupFiles.forEach(file => {
+                fs.unlink(file, (error) => {
+                    if (error) console.error(`Error deleting file ${file}:`, error);
+                    else console.log(`File deleted: ${file}`);
+                });
+            });
         };
     
         req.on('close', cleanup);
