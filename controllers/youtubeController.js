@@ -128,7 +128,7 @@ module.exports = {
                     res.download(outputPath, `${title}.mp4`, (error) => {
                         if (error) {
                             console.log(error);
-                            res.status(500).send("Error downloading file");
+                            res.status(500).send("Error downloading file", error);
                         } else {
                             console.log(`[YT>MP4] Audio converted: ${title}`);
                             fs.unlinkSync(outputPath);
