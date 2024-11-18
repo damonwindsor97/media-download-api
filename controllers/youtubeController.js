@@ -98,7 +98,7 @@ module.exports = {
                 throw new Error('Could not find compatible audio and video streams');
             }
     
-            const tempDir = path.join(process.cwd(), 'temp');
+            const tempDir = path.join(process.cwd(), './temp');
             // Ensure temp directory exists
             if (!fs.existsSync(tempDir)) {
                 fs.mkdirSync(tempDir, { recursive: true });
