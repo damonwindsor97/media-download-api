@@ -47,22 +47,7 @@ module.exports = {
 
     async youtubeToMp4(req, res, next) {
         let ffmpegProcess;
-        let cleanupFiles = [];
-    
-        const cleanup = () => {
-            if (ffmpegProcess) {
-                ffmpegProcess.kill('SIGKILL');
-            }
 
-            cleanupFiles.forEach(file => {
-                fs.unlink(file, (error) => {
-                    if (error) console.error(`Error deleting file ${file}:`, error);
-                    else console.log(`File deleted: ${file}`);
-                });
-            });
-        };
-    
-        req.on('close', cleanup);
     
         try {
             const { videoId } = req.body; 
@@ -121,10 +106,6 @@ module.exports = {
                 console.error(`ffmpeg stderr: ${data.toString()}`);
             });
             
-            ffmpegProcess.stdout.on('data', (data) => {
-                console.log(`ffmpeg stdout: ${data.toString()}`);
-            });
-            
             ffmpegProcess.on('exit', (code) => {
                 if (code !== 0) {
                     console.error(`ffmpeg process exited with code ${code}`);
@@ -157,12 +138,12 @@ module.exports = {
             ffmpegProcess.on('error', (error) => {
                 console.error('[YT>MP4] ffmpegProcess error:', error);
                 res.status(500).send('Internal server error during video processing');
-                cleanup();
+   
             });
     
         } catch (error) {
             console.error('Error in youtubeToMp4:', error);
-            cleanup();
+
             res.status(500).json({ error: 'An error occurred while processing the video' });
         }
     },
