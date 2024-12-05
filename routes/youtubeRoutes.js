@@ -9,9 +9,6 @@ module.exports = () => {
     router.get('/test', YoutubeController.testCallback);
 
     router.post('/getTitle', YoutubeController.getTitle);
-
-    router.post('/toMp4', YoutubeController.youtubeToMp4);
-
     
     return router
 }
