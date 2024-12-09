@@ -80,8 +80,7 @@ async function getPlaylistInfo(playlistId) {
             await getAccessToken();
         }
         // Make call to Spotify
-        const response = await axios.get(`https://api.spotify.com/v1/playlists/${playlistId}
-`, {
+        const response = await axios.get(`https://api.spotify.com/v1/playlists/${playlistId}`, {
             headers: {
                 Authorization: `Bearer ${spotifyToken}`
             }
@@ -155,9 +154,19 @@ module.exports = {
             console.log('[Spotify] Searching for Playlist ID via Spotify')
             const response = await getPlaylistInfo(playlistId)
 
+            // Map through and grab title of each song
+            const titles = response.tracks.items.map(item => item.track.name);
+            // Map through and get each artist/s
+            const artists = response.tracks.items.map(item => item.track.artists.map(artist => artist.name).join(', '))
+
+            // Putting each response onto a new line +nice format
+            const formattedResponse = artists.map((artists, index) => `Artist: ${artists} - Song: ${titles[index]}`).join('\n')
+
+
             console.log(response);
-            res.send(response)
+            res.send(formattedResponse)
         } catch (error) {
+            // If we get a 401, we run the getToken function and rerun the request
             if (error === 401){
                 getAccessToken(clientId, clientSecret, tokenUrl)
                 return ('/getTitle').post(req, res)
