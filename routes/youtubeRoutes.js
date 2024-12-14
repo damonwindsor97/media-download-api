@@ -1,14 +1,13 @@
-const express = require('express')
+const express = require('express');
 const router = express.Router();
 
-const youtubeController = require('../controllers/youtubeController')
+const YoutubeController = require('../controllers/youtubeController')
 
-module.exports =  () => {
-    router.get('/test', youtubeController.testCallback)
+module.exports = () => {
 
-    router.post('/toMp4', youtubeController.youtubeToMp4)
+    router.get('/test', YoutubeController.testCallback);
 
-    router.post('/getTitle', youtubeController.getTitle)
+    router.post('/getTitle', YoutubeController.getTitle);
 
     return router
 }

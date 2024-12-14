@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-const soundcloudRoutes = require('./soundcloudRoutes.js')
-const youtubeRoutes = require('./youtubeRoutes.js')
-const urlRoutes = require('./urlRoutes.js');
-const videoRoutes = require('./videoRoutes.js')
-
+const soundcloudRoutes = require('../routes/soundcloudRoutes.js')
+const urlRoutes = require('../routes/urlRoutes.js');
+const youtubeRoutes = require('../routes/youtubeRoutes.js')
+const spotifyRoutes = require('../routes/spotifyRoutes.js')
 
 module.exports = () => {
     router.get('/', (req, res, next) => {
@@ -16,9 +15,10 @@ module.exports = () => {
 
     router.use('/youtube', youtubeRoutes())
 
-    router.use('/url', urlRoutes());
+    router.use('/youtube', youtubeRoutes())
 
-    router.use('/video', videoRoutes());
+    router.use('/spotify', spotifyRoutes())
+
 
     return router
 }
