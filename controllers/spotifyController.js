@@ -1,8 +1,5 @@
 const axios = require('axios')
 
-const path = require('path');
-const fs = require('fs');
-
 const clientId = process.env.SPOTIFY_CLIENT_ID;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 const tokenUrl = 'https://accounts.spotify.com/api/token';
@@ -142,29 +139,28 @@ module.exports = {
         try {
             const spotifyUrl = req.body.link;
             console.log('[Spotify] Playlist ID obtained')
-
+    
             const playlistIdMatch = spotifyUrl.match(/playlist\/([a-zA-Z0-9]{22})/);
             if (!playlistIdMatch){
                 return res.status(400).send('Invalid Spotify playlist URL');
             };
-
+    
             const playlistId = playlistIdMatch[1];
             console.log('[Spotify] Track ID obtained')
-
+    
             console.log('[Spotify] Searching for Playlist ID via Spotify')
             const response = await getPlaylistInfo(playlistId)
-
+    
             // Map through and grab title of each song
             const titles = response.tracks.items.map(item => item.track.name);
-            // Map through and get each artist/s
+            // Map through and grab each artist/s
             const artists = response.tracks.items.map(item => item.track.artists.map(artist => artist.name).join(', '))
-
-            // Putting each response onto a new line +nice format
-            const formattedResponse = artists.map((artists, index) => `Artist: ${artists} - Song: ${titles[index]}`).join('\n')
-
-
-            console.log(response);
-            res.send(formattedResponse)
+    
+            // Putting each response onto a new line + nice format
+            const formattedResponse = artists.map((artists, index) => `Artist: ${artists} - Song: ${titles[index]}`).join('\n');
+    
+            // Send to user as plain text
+            res.type('text/plain').send(formattedResponse); 
         } catch (error) {
             // If we get a 401, we run the getToken function and rerun the request
             if (error === 401){
@@ -173,6 +169,6 @@ module.exports = {
             }
             console.error('Error fetching track information:', error);
             res.status(500).send('Failed to fetch track information');
-            }
         }
+    }
     }
