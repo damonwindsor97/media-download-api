@@ -1,7 +1,10 @@
 const axios = require('axios')
 const URL = require('../server/models/Urls')
 
-const short = require('short-uuid');
+const { customAlphabet } = require('nanoid-cjs');
+const nanoid = customAlphabet('1234567890abcdef', 10);
+
+const shortId = nanoid();
 
 module.exports = {
 
@@ -31,9 +34,11 @@ module.exports = {
         }
     
         try {
+            console.log('Checking to see if URL exists in db')
             // First check if URL already exists
             let url = await URL.findOne({ originalUrl: req.body.url }).exec();
             if (url) {
+                console.log('URL found in db, sending to user')
                 return res.json({
                     short: `${process.env.URL.replace(/\/$/, '')}/${url.slug}`,
                     originalUrl: url.originalUrl
@@ -41,6 +46,7 @@ module.exports = {
             }
     
             // Validate the target URL / see if the link is legit
+            console.log('Seeing if URL is live')
             const response = await axios.get(req.body.url.toString(), {
                 validateStatus: (status) => status < 500,
                 timeout: 5000
@@ -54,14 +60,15 @@ module.exports = {
             }
     
             // Create new short URL
-            const slug = short.generate();
+            console.log('Creating new slug/short url id')
+            const slug = shortId;
             const newUrl = await URL.create({
                 originalUrl: req.body.url,
                 slug: slug,
                 createdAt: new Date()
             });
             
-            // return the response in JSON, containing the short link, OGlink and link status
+            // return the response in JSON, containing the short link which contains our server URL & the slug, OGlink and link status
             return res.json({
                 short: `${process.env.URL.replace(/\/$/, '')}/${newUrl.slug}`,
                 originalUrl: newUrl.originalUrl,
