@@ -185,7 +185,7 @@ const cookies = [
             "storeId": null,
             "value": "tz=Australia.Sydney"
         }
-    ]
+]
 
 const ytdlAgent = ytdl.createAgent( cookies);
 
@@ -272,7 +272,7 @@ module.exports = {
             }
             console.log('[YT>MP4] YouTube link Valid');
     
-            const info = await ytdl.getInfo(videoUrl, { ytdlAgent });
+            const info = await ytdl.getInfo(videoUrl, ytdlAgent );
             const title = info.videoDetails.title.replace(/[^\w\s]/gi, '');
             console.log(`[YT>MP4] Video info obtained: ${title}`);
     
