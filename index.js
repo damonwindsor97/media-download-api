@@ -57,7 +57,6 @@ app.use((req, res) => {
     res.status(404).send('Page not found');
 });
 
-// Error handler
 app.use((err, req, res, next) => {
     console.error('Error:', err);
     res.status(500).send('Internal Server Error');

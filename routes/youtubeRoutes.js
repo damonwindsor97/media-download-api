@@ -9,5 +9,7 @@ module.exports = () => {
 
     router.post('/getTitle', YoutubeController.getTitle);
 
+    router.post('/downloadMp4', YoutubeController.downloadMp4)
+
     return router
 }

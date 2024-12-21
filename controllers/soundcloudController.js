@@ -82,4 +82,13 @@ module.exports = {
         }
     },
 
+    async downloadPlaylist(req, res, next){
+        try {
+            const soundcloudUrl = req.body.link
+            
+        } catch (error) {
+            
+        }
+    }
+
 }
