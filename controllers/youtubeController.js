@@ -256,7 +256,7 @@ const cookies = [
     }
 ]
 const proxyUrl = 'http://customer-damonwindsor97_AiLaW:Chopper1997@pr.oxylabs.io:7777'
-const ytdlAgent = ytdl.createProxyAgent({ uri: proxyUrl}, cookies);
+const ytdlAgent = ytdl.createAgent( cookies);
 
 module.exports = {
     async testCallback(req, res, next){
@@ -341,7 +341,7 @@ module.exports = {
             }
             console.log('[YT>MP4] YouTube link Valid');
     
-            const info = await ytdl.getInfo(videoUrl, {  });
+            const info = await ytdl.getInfo(videoUrl, { ytdlAgent });
             const title = info.videoDetails.title.replace(/[^\w\s]/gi, '');
             console.log(`[YT>MP4] Video info obtained: ${title}`);
     
@@ -366,7 +366,7 @@ module.exports = {
     
             // ytdl jazziness
             console.log("[YT>MP4] Initiating process with ytdl");
-            const ytdlVideoStream = ytdl(videoUrl, { quality: 'highestvideo' })
+            const ytdlVideoStream = ytdl(videoUrl, { quality: 'highestvideo', ytdlAgent })
 
             .on('error', (error) => {
                 console.error('[YT>MP4] Error in ytdl:', error);
