@@ -260,7 +260,7 @@ module.exports = {
             }
             console.log('[YT>MP4] YouTube link Valid');
     
-            const info = await ytdl.getInfo(videoUrl);
+            const info = await ytdl.getInfo(videoUrl, {agent: ytdlAgent});
             const title = info.videoDetails.title.replace(/[^\w\s]/gi, '');
             console.log(`[YT>MP4] Video info obtained: ${title}`);
     
