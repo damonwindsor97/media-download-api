@@ -301,7 +301,7 @@ module.exports = {
             // 'code' = exit code or exit status
             ffmpegProcess.on('close', (code) => {
                 console.log(`[YT>MP4] ffmpeg process closed with code ${code}`);
-                if (code === 0) {
+                try {
                     console.log(`[YT>MP4] Video successfully converted: ${title}`);
                     res.download(ffmpegPath, `${title}.mp4`, (error) => {
                         if (error) {
@@ -310,7 +310,7 @@ module.exports = {
                         }
                         cleanup();
                     });
-                } else {
+                } catch (error) {
                     console.error(`[YT>MP4] ffmpeg process exited with code ${code}`);
                     res.status(500).send('Error processing video');
                     cleanup();
