@@ -15,7 +15,7 @@ module.exports = () => {
 
     router.use('/youtube', youtubeRoutes())
 
-    router.use('/youtube', youtubeRoutes())
+    router.use('/url', urlRoutes())
 
     router.use('/spotify', spotifyRoutes())
 
