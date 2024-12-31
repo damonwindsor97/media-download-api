@@ -90,21 +90,21 @@ module.exports = {
             const videoTitle = response.title;
     
             console.log('[YT>MP4] Fetching response from video URL...')
-            const audioResponse = await fetch(dataUrl);
-            if (!audioResponse.ok) {
+            const videoResponse = await fetch(dataUrl);
+            if (!videoResponse.ok) {
                 throw new Error('Failed to fetch video file');
             }
     
             console.log('[YT>MP4] Setting Headers...')
-            res.setHeader('Content-Type', 'audio/mpeg');
-            res.setHeader('Content-Disposition', `attachment; filename="${videoTitle}.mp3"`);
+            res.setHeader('Content-Type', 'video/mp4');
+            res.setHeader('Content-Disposition', `attachment; filename="${videoTitle}.mp4"`);
             res.setHeader('X-Audio-Title', videoTitle);
             
             console.log('[YT>MP4] Awaiting video response buffer...')
-            const audioBuffer = await audioResponse.buffer();
+            const videoBuffer = await videoResponse.buffer();
     
             console.log('[YT>MP4] Sending video to user...')
-            res.status(200).send(audioBuffer);
+            res.status(200).send(videoBuffer);
         } catch (error) {
             console.log(error)
             res.status(400).send(error)
