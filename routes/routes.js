@@ -5,6 +5,7 @@ const soundcloudRoutes = require('../routes/soundcloudRoutes.js')
 const urlRoutes = require('../routes/urlRoutes.js');
 const youtubeRoutes = require('../routes/youtubeRoutes.js')
 const spotifyRoutes = require('../routes/spotifyRoutes.js')
+const videoRoutes = require('../routes/videoRoutes.js')
 
 module.exports = () => {
     router.get('/', (req, res, next) => {
@@ -19,6 +20,7 @@ module.exports = () => {
 
     router.use('/spotify', spotifyRoutes())
 
+    router.use('/video', videoRoutes())
 
     return router
 }
