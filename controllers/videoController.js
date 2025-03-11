@@ -3,7 +3,8 @@ const path = require('path');
 const cp = require('child_process');
 
 const ffmpeg = require('fluent-ffmpeg');
-ffmpeg.setFfmpegPath('C:\\ProgramData\\chocolatey\\bin\\ffmpeg.exe');
+ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
+// ffmpeg.setFfmpegPath('C:\\ProgramData\\chocolatey\\bin\\ffmpeg.exe');
 
 const multer  = require('multer')
 
