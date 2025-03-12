@@ -47,14 +47,16 @@ module.exports = {
             }
             
             const tempFilePath = file.path;
-            console.log('Temp fil path: ', tempFilePath)
+            console.log('Temp file path: ', tempFilePath)
 
 
             const outputPath = path.join(path.dirname(tempFilePath), file.filename + '.mp3');
 
             ffmpeg(tempFilePath)
+                .duration(250)
                 .noVideo()
                 .audioCodec('libmp3lame')
+                .timeout(30000)
                 .save(outputPath)
                 .on('end', () => {
                     console.log('Audio Extracted for: ', file.originalname);
