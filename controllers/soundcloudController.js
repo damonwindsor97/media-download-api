@@ -66,8 +66,8 @@ module.exports = {
             
                 res.download(audioPath, `${title}.m4a`, (error) => {
                     if (error) {
-                        console.log(error);
-                        res.status(500).send("Error downloading file");
+                        console.log('[SC] Error downloading file: ', error);
+                        res.status(500).send("Error downloading file: ", error);
                     } else {
                         console.log(`[SC] Audio converted: ${title}`);
                         fs.unlinkSync(audioPath);

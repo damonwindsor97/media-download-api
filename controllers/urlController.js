@@ -51,10 +51,27 @@ module.exports = {
                 validateStatus: (status) => status < 500,
                 timeout: 5000
             });
-    
+            
+            // Check if the response is not a 404 or another unexpected status
             if (response.status === 404) {
                 return res.status(404).json({
                     error: 'URL not found',
+                    status: response.status
+                });
+            }
+            
+            // Validate if the response data is JSON
+            let isValidJson = false;
+            try {
+                JSON.parse(JSON.stringify(response.data));
+                isValidJson = true;
+            } catch (err) {
+                console.log('Non-JSON response received:', response.data);
+            }
+            
+            if (!isValidJson) {
+                return res.status(400).json({
+                    error: 'Received non-JSON response from target URL',
                     status: response.status
                 });
             }
