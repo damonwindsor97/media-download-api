@@ -57,7 +57,6 @@ module.exports = {
                     '-ar 22050',
                     '-b:a 64k'
                   ])
-                .audioCodec('libmp3lame')
                 .save(outputPath)
                 .on('end', () => {
                     console.log('[MP4 > MP3] Audio Extracted for: ', file.originalname);
