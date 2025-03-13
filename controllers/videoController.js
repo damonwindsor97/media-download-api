@@ -1,12 +1,10 @@
 const fs = require('fs');
 const path = require('path');
-const cp = require('child_process');
 
 const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
 // ffmpeg.setFfmpegPath('C:\\ProgramData\\chocolatey\\bin\\ffmpeg.exe');
 
-const multer  = require('multer')
 
 module.exports = {
     async testCallback(req, res, next){
@@ -18,7 +16,6 @@ module.exports = {
     },
 
 
-    
     async getInfo(req, res, next) {
         try {
             const file = req.file;
@@ -36,49 +33,55 @@ module.exports = {
     },
 
 
-
     async videoToMp3(req, res, next) {
+        console.log('[MP4 > MP3] Initiated...')
         try {
             const file = req.file;
             if (!file) {
                 return res.status(400).send('No file uploaded');
             } else {
-                console.log('File obtained');
+                console.log('File obtained...');
             }
             
             const tempFilePath = file.path;
-            console.log('Temp file path: ', tempFilePath)
-
+            console.log('[MP4 > MP3] Temp file path: ', tempFilePath)
 
             const outputPath = path.join(path.dirname(tempFilePath), file.filename + '.mp3');
 
+            console.log('[MP4 > MP3] Starting FFMPEG processes...')
             ffmpeg(tempFilePath)
                 .noVideo()
+                .outputOptions([
+                    '-preset ultrafast',
+                    '-ac 1',
+                    '-ar 22050',
+                    '-b:a 64k'
+                  ])
                 .audioCodec('libmp3lame')
                 .save(outputPath)
                 .on('end', () => {
-                    console.log('Audio Extracted for: ', file.originalname);
+                    console.log('[MP4 > MP3] Audio Extracted for: ', file.originalname);
                     
                     res.download(outputPath, `${file.originalname}.mp3`, (error) => {
                         if(error){
                             console.log(error);
-                            res.status(500).send('Error downloading file: ', error);
+                            res.status(500).send('[MP4 > MP3] Error downloading file: ', error);
                         } else {
-                            console.log('Audio sent back to user: ', file.originalname);
+                            console.log('[MP4 > MP3] Audio sent back to user: ', file.originalname);
                             
                             try {
                                 fs.unlinkSync(tempFilePath);
                                 fs.unlinkSync(outputPath);
-                                console.log('Files successfully deleted');
+                                console.log('[MP4 > MP3] Files successfully deleted from temp storage.');
                             } catch (cleanupError) {
-                                console.error('Error during cleanup:', cleanupError);
+                                console.error('[MP4 > MP3] Error during cleanup:', cleanupError);
                             }
                         }
                     });
                 })
                 .on('error', (error) => {
-                    console.error('Error during conversion:', error);
-                    res.status(500).send('Error converting file: ', error);
+                    console.error('[MP4 > MP3] Error during conversion:', error);
+                    res.status(500).send('[MP4 > MP3] Error converting file: ', error);
                 });
 
         } catch (error) {
