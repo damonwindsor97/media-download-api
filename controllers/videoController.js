@@ -60,11 +60,13 @@ module.exports = {
             ffmpeg(tempFilePath)
                 .noVideo()
                 .outputOptions([
-                    '-preset ultrafast',
-                    '-ac 1',
-                    '-ar 22050',
-                    '-b:a 64k'
+                '-preset ultrafast',
+                '-ac 1',
+                '-ar 22050',
+                '-c:a aac',
+                '-b:a 64k'
                 ])
+                .outputFormat('mp4')
                 .on('start', (commandLine) => {
                     const startDelay = Date.now() - ffmpegStartTime;
                     console.log(`[MP4 > MP3] FFmpeg command started after ${startDelay}ms delay`, new Date().toISOString());
