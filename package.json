@@ -31,7 +31,7 @@
     "spotify-web-api-node": "^5.0.2",
     "spotifydl-core": "^0.2.0",
     "tough-cookie": "^5.0.0",
-    "undici": "^6.19.8"
+    "undici": "^6.21.1"
   },
   "name": "media-download-api",
   "description": "An API I've created originally to use for my link utility site",
