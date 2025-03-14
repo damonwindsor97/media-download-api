@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@distube/ytdl-core": "^4.15.8",
+    "@distube/ytdl-core": "^4.16.0",
     "axios": "^1.7.4",
     "child_process": "^1.0.2",
     "cors": "^2.8.5",
