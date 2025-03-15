@@ -22,7 +22,7 @@ module.exports = () => {
 
     router.get('/test', VideoController.testCallback)
 
-    router.post('/getInfo', VideoController.getInfo)
+    router.post('/getInfo', upload.single('file'), VideoController.getInfo)
 
     router.post('/tomp3', upload.single('file'), VideoController.videoToMp3)
 
