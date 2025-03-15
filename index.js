@@ -40,6 +40,14 @@ const connectToMongo = async () => {
 };
 connectToMongo();
 
+const fileUpload = require('express-fileupload');
+
+app.use(fileUpload({
+    limits: { fileSize: 200 * 1024 * 1024 }, 
+    useTempFiles: true,
+    tempFileDir: '../temp/videoUploads',
+}));
+
 // Health check route
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK' });
