@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ffmpeg = require('fluent-ffmpeg');
-// ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
-ffmpeg.setFfmpegPath('C:\\ProgramData\\chocolatey\\bin\\ffmpeg.exe');
+ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
+// ffmpeg.setFfmpegPath('C:\\ProgramData\\chocolatey\\bin\\ffmpeg.exe');
 
 
 module.exports = {
@@ -16,6 +16,7 @@ module.exports = {
     },
 
 
+    
     async getInfo(req, res, next) {
         try {
             const file = req.file;
@@ -33,6 +34,7 @@ module.exports = {
     },
 
 
+
     async videoToMp3(req, res, next) {
         try {
             const file = req.file;
@@ -43,39 +45,29 @@ module.exports = {
             }
             
             const tempFilePath = file.path;
-            console.log('Temp file path: ', tempFilePath);
-    
-  
-            const outputFileName = `${file.originalname}.mp3`;
-            const outputPath = path.join(process.cwd(), "temp", outputFileName);
-    
-            const ffmpegProcess = ffmpeg(tempFilePath)
+            console.log('Temp fil path: ', tempFilePath)
+
+
+            const outputPath = path.join(path.dirname(tempFilePath), file.filename + '.mp3');
+
+            ffmpeg(tempFilePath)
                 .noVideo()
                 .audioCodec('libmp3lame')
-                .format('mp3')
-                .output(outputPath)
+                .save(outputPath)
                 .on('end', () => {
-                    console.log(`Audio converting: ${outputFileName}`);
+                    console.log('Audio Extracted for: ', file.originalname);
                     
-
-                    res.set({
-                        'Content-Disposition': `attachment; filename="${encodeURIComponent(outputFileName)}"`,
-                        'Content-Type': 'audio/mp3',
-                    });
-                    
-
-                    res.download(outputPath, outputFileName, (error) => {
-                        if (error) {
-                            console.log('Error downloading file: ', error);
-                            res.status(500).send("Error downloading file: ", error);
+                    res.download(outputPath, `${file.originalname}.mp3`, (error) => {
+                        if(error){
+                            console.log(error);
+                            res.status(500).send('Error downloading file: ', error);
                         } else {
-                            console.log(`Audio converted and sent to user: ${outputFileName}`);
+                            console.log('Audio sent back to user: ', file.originalname);
                             
-                            // Clean up both temp files
                             try {
                                 fs.unlinkSync(tempFilePath);
                                 fs.unlinkSync(outputPath);
-                                console.log('Temporary files successfully deleted');
+                                console.log('Files successfully deleted');
                             } catch (cleanupError) {
                                 console.error('Error during cleanup:', cleanupError);
                             }
@@ -86,15 +78,12 @@ module.exports = {
                     console.error('Error during conversion:', error);
                     res.status(500).send('Error converting file: ', error);
                 });
-                
-            // Run the ffmpeg process
-            ffmpegProcess.run();
-    
+
         } catch (error) {
             console.error('Unexpected error:', error);
             return res.status(500).send('Internal Server Error');
         }
-    }
+    },
 
 
     
