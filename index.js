@@ -12,7 +12,8 @@ app.use(cors({
     origin: "*",  
     methods: ["GET", "POST"],
     credentials: true
-    }));
+}));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -52,6 +53,9 @@ app.use('/api', routes());
 // Redirect route - This must be after API routes
 app.get('/:slug', urlController.getSlug);
 
+app.get('/', (req, res) => {
+    res.send('Media Download API is live');
+});
 
 app.use((req, res) => {
     res.status(404).send('Page not found');

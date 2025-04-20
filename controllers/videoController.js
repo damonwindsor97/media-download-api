@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ffmpeg = require('fluent-ffmpeg');
-ffmpeg.setFfmpegPath('/usr/bin/ffmpeg.exe');
+ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
 // ffmpeg.setFfmpegPath('C:/Program Files/ffmpeg/bin/ffmpeg.exe');
 
 
@@ -15,21 +15,30 @@ module.exports = {
         }
     },
 
-
-    
     async getInfo(req, res, next) {
         try {
+            console.log('Request received');
+            
             const file = req.file;
             if (!file) {
                 return res.status(400).send('No file uploaded');
             } else {
                 console.log('File obtained');
             }
-            
+    
             const tempFilePath = file.path;
-
-            res.status(200).send(file)
-            fs.unlinkSync(tempFilePath)
+    
+            console.log('Sending file info...');
+            res.status(200).send(file);
+    
+            console.log('Info sent, deleting temporary file...');
+            fs.unlink(tempFilePath, (err) => {
+                if (err) {
+                    console.error('Error deleting temp file:', err);
+                } else {
+                    console.log('Temporary file deleted');
+                }
+            });
         } catch (error) {
             console.error('Unexpected error:', error);
             return res.status(500).send('Internal Server Error');
