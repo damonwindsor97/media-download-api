@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ffmpeg = require('fluent-ffmpeg');
-ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
-// ffmpeg.setFfmpegPath('C:\\ProgramData\\chocolatey\\bin\\ffmpeg.exe');
+ffmpeg.setFfmpegPath('/usr/bin/ffmpeg.exe');
+// ffmpeg.setFfmpegPath('C:/Program Files/ffmpeg/bin/ffmpeg.exe');
 
 
 module.exports = {
@@ -23,10 +23,13 @@ module.exports = {
             if (!file) {
                 return res.status(400).send('No file uploaded');
             } else {
-                console.log('File obtained:');
+                console.log('File obtained');
             }
             
+            const tempFilePath = file.path;
+
             res.status(200).send(file)
+            fs.unlinkSync(tempFilePath)
         } catch (error) {
             console.error('Unexpected error:', error);
             return res.status(500).send('Internal Server Error');
@@ -41,11 +44,16 @@ module.exports = {
             if (!file) {
                 return res.status(400).send('No file uploaded');
             } else {
-                console.log('File obtained');
+                console.log(`File obtained: ${file.originalname}`);
             }
+
+            const originalName = file.originalname;
+            // REMEMBER!! parse within path will remove the extension name
+            const baseName = path.parse(originalName).name;
             
             const tempFilePath = file.path;
-            console.log('Temp fil path: ', tempFilePath)
+
+            console.log('Temp file path: ', tempFilePath)
 
 
             const outputPath = path.join(path.dirname(tempFilePath), file.filename + '.mp3');
@@ -53,30 +61,31 @@ module.exports = {
             ffmpeg(tempFilePath)
                 .noVideo()
                 .audioCodec('libmp3lame')
+                .format('mp3')  
                 .save(outputPath)
                 .on('end', () => {
                     console.log('Audio Extracted for: ', file.originalname);
                     
-                    res.download(outputPath, `${file.originalname}.mp3`, (error) => {
-                        if(error){
-                            console.log(error);
-                            res.status(500).send('Error downloading file: ', error);
-                        } else {
-                            console.log('Audio sent back to user: ', file.originalname);
-                            
-                            try {
-                                fs.unlinkSync(tempFilePath);
-                                fs.unlinkSync(outputPath);
-                                console.log('Files successfully deleted');
-                            } catch (cleanupError) {
-                                console.error('Error during cleanup:', cleanupError);
-                            }
+                    res.download(outputPath, `${baseName}.mp3`, (error) => {
+                        if (error) {
+                          console.error('Download error:', error);
+                          return res.status(500).send('Error downloading file');
                         }
-                    });
+                      });
+                      
+                      res.on('finish', () => {
+                        try {
+                          fs.unlinkSync(tempFilePath);
+                          fs.unlinkSync(outputPath);
+                          console.log('Files successfully deleted');
+                        } catch (cleanupError) {
+                          console.error('Error during cleanup:', cleanupError);
+                        }
+                      });
                 })
                 .on('error', (error) => {
                     console.error('Error during conversion:', error);
-                    res.status(500).send('Error converting file: ', error);
+                    res.status(500).send(`Error download file: ${error.message}`);
                 });
 
         } catch (error) {

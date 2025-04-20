@@ -1,11 +1,11 @@
 const express = require('express')
 const router = express.Router();
 
-const path = require('path');
+const os = require('os');
 
 const multer  = require('multer')
 const storage = multer.diskStorage({
-    destination: path.join(__dirname, '../temp/videoUploads'),
+    destination: os.tmpdir(),
     
     filename: function (req, file, cb) {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
