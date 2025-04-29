@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ffmpeg = require('fluent-ffmpeg');
-ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
-// ffmpeg.setFfmpegPath('C:/Program Files/ffmpeg/bin/ffmpeg.exe');
+// ffmpeg.setFfmpegPath('/usr/bin/ffmpeg.exe');
+ffmpeg.setFfmpegPath('C:/Program Files/ffmpeg/bin/ffmpeg.exe');
 
 
 module.exports = {
