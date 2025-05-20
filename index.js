@@ -1,10 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const mongoose = require('mongoose');
 const urlController = require('./controllers/urlController.js')
 const fs = require('fs')
 const path = require('path')
+const mongoose = require('mongoose');
+
 
 const app = express();
 
@@ -12,7 +13,8 @@ app.use(cors({
     origin: "*",  
     methods: ["GET", "POST"],
     credentials: true
-    }));
+}));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -28,7 +30,7 @@ if(!fs.existsSync(tempDir)){
 }
 console.log(`Temp directory: ${tempDir}`);
 
-// Database connection
+// Mongo Database connection
 const connectToMongo = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI);
@@ -55,11 +57,14 @@ app.get('/health', (req, res) => {
 
 // API routes
 const routes = require('./routes/routes.js');
-app.use('/api', routes());
+app.use('/api/v1', routes());
 
 // Redirect route - This must be after API routes
 app.get('/:slug', urlController.getSlug);
 
+app.get('/', (req, res) => {
+    res.send('Media Download API is live');
+});
 
 app.use((req, res) => {
     res.status(404).send('Page not found');
