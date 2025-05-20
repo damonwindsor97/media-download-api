@@ -3,7 +3,7 @@
     "@aws-sdk/client-s3": "^3.799.0",
     "@aws-sdk/lib-storage": "^3.808.0",
     "@aws-sdk/url-parser-node": "^3.1.0",
-    "@distube/ytdl-core": "^4.15.8",
+    "@distube/ytdl-core": "^4.16.10",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.7.4",
     "child_process": "^1.0.2",
@@ -21,7 +21,7 @@
     "mongodb": "^6.10.0",
     "mongoose": "^8.7.2",
     "morgan": "^1.10.0",
-    "multer": "^1.4.5-lts.1",
+    "multer": "^2.0.0",
     "nanoid-cjs": "^0.0.7",
     "node-fetch": "^2.7.0",
     "nodemon": "^3.1.1",
@@ -37,7 +37,7 @@
     "spotifydl-core": "^0.2.0",
     "streamifier": "^0.1.1",
     "tough-cookie": "^5.0.0",
-    "undici": "^6.19.8"
+    "undici": "^6.21.2"
   },
   "name": "media-download-api",
   "description": "An API I've created originally to use for my link utility site",
