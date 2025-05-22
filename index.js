@@ -45,6 +45,7 @@ app.set('io', io)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+app.set('trust proxy', 1);
 
 require('dotenv').config();
 
