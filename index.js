@@ -19,11 +19,13 @@ const io = new Server(server, {
     cors: {
         origin: "https://dev-linkify-gg.onrender.com",
         methods: ["GET", "POST"],
+        credentials: true
     }
 })
 app.use(cors({ 
     origin: "https://dev-linkify-gg.onrender.com",  
     methods: ["GET", "POST"],
+    credentials: true
 }));
 // const io = new Server(server, {
 //     cors: {
