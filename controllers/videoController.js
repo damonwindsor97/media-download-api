@@ -4,7 +4,7 @@ ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
 
 
 const fs = require('fs');
-const { createReadStream, unlinkSync } = require('fs');
+const { createReadStream } = require('fs');
 const path = require('path');
 require('dotenv').config()
 
@@ -29,29 +29,37 @@ module.exports = {
     },
 
     async videoToMp3(req, res, next) {
+        const io = req.app.get('io');
+        const file = req.file
+
         try {
-            // Log when the request arrives at the controller
-            console.log('Request reached videoToMp3 at:', new Date().toISOString());
+            console.log('[MP4 > MP3] Request received at:', new Date().toISOString());
             
-            if (!req.files || !req.files.file) {
+            if (!req.file) {
+                io.emit('error', { message: 'No file uploaded' })
                 return res.status(400).send('No file uploaded');
             }
 
-            console.log('File Obtained. - ', currentTime);
-            console.log(file);
-
+            console.log('[MP4 > MP3] File Obtained.');
+            
             const inputFilePath = file.path;
             const outputPath = path.join(
                 path.dirname(inputFilePath),
                 `${path.basename(inputFilePath)}.mp3`
             );
+            
+            io.emit('progress', { percent: 20, message: 'Contacting Server' })
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
-            console.log('Contacting Server for Upload. - ', currentTime);
+            console.log('[MP4 > MP3] Contacting Server for Upload.');
+            // create our key for S3, the time along with the files name
             const s3Key = `${currentTime}-${file.originalname}`;
 
             try {
-                // Upload to S3
+                // create a readable stream from the file that was uploaded by the user
                 const fileStream = createReadStream(inputFilePath);
+                // Start upload to amazon, multipart - so multiple parts are uploading at once
+                io.emit('progress', { percent: 40, message: 'Uploading... Please be patient.' })
                 const upload = new Upload({
                     client: s3Client,
                     params: {
@@ -63,20 +71,22 @@ module.exports = {
                     partSize: 50 * 1024 * 1024,
                     leavePartsOnError: false,
                 });
-
+                // basic progress tracking of file size upload
                 upload.on('httpUploadProgress', (progress) => {
-                    console.log(`Uploaded ${progress.loaded} of ${progress.total} bytes`);
+                    console.log(`[MP4 > MP3] Uploaded ${progress.loaded} of ${progress.total} bytes`);
                 });
 
                 const result = await upload.done();
-                console.log(`Upload Success: ${result.Location} - ${currentTime}`);
 
-                // Download from S3 to a local file first
+                console.log(`[MP4 > MP3] Upload Success: ${result.Location}`);
+                io.emit('progress', { percent: 70, message: 'Processing...' })
+
+                // Download from S3 to a local file first, placing it in a temp location
                 const s3DownloadPath = path.join(
                     path.dirname(inputFilePath),
                     `s3-downloaded-${path.basename(inputFilePath)}`
                 );
-                
+                // check S3 Docs for function - uses our bucket name and key of the object
                 const getObjectCommand = new GetObjectCommand({
                     Bucket: process.env.AWS_S3_BUCKET_NAME,
                     Key: s3Key,
@@ -86,16 +96,21 @@ module.exports = {
                 
                 // Save the S3 stream to a local file
                 const s3Stream = s3Response.Body;
+                // create the writestream from the temp S3 file
                 const s3WriteStream = fs.createWriteStream(s3DownloadPath);
                 
+                // THIS IS DIFFERENT TO WHAT I USUALLY DO!!
+                // Use a promise to ensure the download completes, before running FFMPEG
                 await new Promise((resolve, reject) => {
                     s3Stream.pipe(s3WriteStream)
                         .on('error', reject)
                         .on('finish', resolve);
                 });
                 
-                console.log('S3 file downloaded, now processing with FFmpeg');
+                console.log('[MP4 > MP3] S3 file downloaded, now processing with FFmpeg');
+                io.emit('progress', { percent: 80, message: 'Converting...' })
 
+                // Run the ffmpeg process within a promise to ensure it completes the function before spitting it back
                 return new Promise((resolve, reject) => {
                     ffmpeg(s3DownloadPath)
                         .outputFormat('mp3')
@@ -104,41 +119,48 @@ module.exports = {
                         .audioChannels(2) 
                         .audioFrequency(44100) 
                         .output(outputPath)
-                        .on('error', (err) => {
-                            console.error('FFmpeg processing failed:', err);
-                            reject(err);
+                        // On error, run this
+                        .on('error', (error) => {
+                            console.error('FFmpeg processing failed:', error);
+                            reject(error);
                         })
+                        // On end, run this
                         .on('end', () => {
-                            console.log('FFmpeg processing finished successfully');
+                            console.log('[MP4 > MP3] FFmpeg processing finished successfully');
                             resolve();
                         })
                         .run();
                 })
                 .then(() => {
-                    // Clean up the original uploaded file and the S3 downloaded file
+                    // Clean up the og uploaded file and the S3 downloaded file
                     fs.unlinkSync(inputFilePath);
                     fs.unlinkSync(s3DownloadPath);
                     
                     // Send the converted file
+                    io.emit('progress', { percent: 100, message: 'Complete!' });
+
                     res.download(outputPath, 'converted.mp3', (error) => {
                         if (error) {
-                            console.error('Download failed:', error);
+                            console.error('[MP4 > MP3] Download failed:', error);
                             return res.status(500).send('Failed to send file');
                         }
 
-                        // Clean up the output file after sending
+                        // Clean up
                         fs.unlink(outputPath, (unlinkError) => {
-                            if (unlinkError) console.error('Failed to delete output file:', unlinkError);
+                            if (unlinkError) console.error('[MP4 > MP3] Failed to delete output file:', unlinkError);
                         });
                     });
                 })
                 .catch((error) => {
-                    console.error('FFmpeg processing error:', error);
+                    console.error('[MP4 > MP3] FFmpeg processing error:', error);
+                    fs.unlinkSync(inputFilePath);
+                    fs.unlinkSync(s3DownloadPath);
+                    fs.unlinkSync(outputPath)
                     return res.status(500).send('FFmpeg processing failed');
                 });
 
             } catch (uploadError) {
-                console.log('Error whilst uploading to Amazon Servers');
+                console.log('[MP4 > MP3] Error whilst uploading to Amazon Servers');
                 return res.status(400).json({
                     message: 'Unable to upload to Amazon Servers',
                     error: uploadError.message,
@@ -146,7 +168,8 @@ module.exports = {
             }
 
         } catch (error) {
-            console.error('Error converting video:', error);
+            console.error('[MP4 > MP3] Error converting video:', error);
+            io.emit('error', {message: 'Upload failed' })
             return res.status(500).send('Internal Server Error');
         }
     },

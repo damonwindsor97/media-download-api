@@ -34,11 +34,11 @@ module.exports = {
         }
     
         try {
-            console.log('Checking to see if URL exists in db')
+            console.log('[URL] Checking to see if URL exists in db')
             // First check if URL already exists
             let url = await URL.findOne({ originalUrl: req.body.url }).exec();
             if (url) {
-                console.log('URL found in db, sending to user')
+                console.log('[URL] URL found in db, sending to user')
                 return res.json({
                     short: `${process.env.URL.replace(/\/$/, '')}/${url.slug}`,
                     originalUrl: url.originalUrl
@@ -46,7 +46,7 @@ module.exports = {
             }
     
             // Validate the target URL / see if the link is legit
-            console.log('Seeing if URL is live')
+            console.log('[URL] Seeing if URL is live')
             const response = await axios.get(req.body.url.toString(), {
                 validateStatus: (status) => status < 500,
                 timeout: 5000
@@ -66,7 +66,7 @@ module.exports = {
                 JSON.parse(JSON.stringify(response.data));
                 isValidJson = true;
             } catch (err) {
-                console.log('Non-JSON response received:', response.data);
+                console.log('[URL] Non-JSON response received:', response.data);
             }
             
             if (!isValidJson) {
@@ -77,7 +77,7 @@ module.exports = {
             }
     
             // Create new short URL
-            console.log('Creating new slug/short url id')
+            console.log('[URL] Creating new slug/short url id')
             const slug = shortId;
             const newUrl = await URL.create({
                 originalUrl: req.body.url,
@@ -93,24 +93,24 @@ module.exports = {
             });
             
         } catch (error) {
-            console.error('Error in shortUrl:', error);
+            console.error('[URL] Error in shortUrl:', error);
             next(error);
         }
     },
     
     async getSlug(req, res, next) {
-        console.log('Accessing slug:', req.params.slug);
+        console.log('[URL] Accessing slug:', req.params.slug);
         try {
             // queries the database for a URL object that matches the given slug
             const url = await URL.findOne({ slug: req.params.slug }).exec();
-            console.log('Found URL:', url);
+            console.log('[URL] Found URL:', url);
             
             if (!url) {
-                console.log('URL not found');
+                console.log('[URL] URL not found');
                 return res.status(404).send('Short URL not found'); 
             }
     
-            console.log('Redirecting to:', url.originalUrl);
+            console.log('[URL] Redirecting to:', url.originalUrl);
             
             // Ensure URL has proper protocol
             // Iff OG URL is found, prepares to redirect by checking if URL has valid protocol
@@ -127,7 +127,7 @@ module.exports = {
             // Perform the redirect
             return res.redirect(301, redirectUrl);
         } catch (error) {
-            console.error('Error in getSlug:', error);
+            console.error('[URL] Error in getSlug:', error);
             next(error);
         }
     }
