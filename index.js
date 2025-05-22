@@ -15,6 +15,20 @@ const server = http.createServer(app);
 
 // CHANGE ORIGINS TO FRONTEND ADDRESS
 
+// const io = new Server(server, {
+//     cors: {
+//         origin: "https://linkify.gg",
+//         methods: ["GET", "POST"],
+//         credentials: true
+//     }
+// })
+
+// app.use(cors({ 
+//     origin: "https://linkify.gg",  
+//     methods: ["GET", "POST"],
+//     credentials: true
+// }));
+
 const io = new Server(server, {
     cors: {
         origin: "https://dev-linkify-gg.onrender.com",
@@ -27,6 +41,7 @@ app.use(cors({
     methods: ["GET", "POST"],
     credentials: true
 }));
+
 // const io = new Server(server, {
 //     cors: {
 //         origin: "http://localhost:5173",
@@ -77,14 +92,6 @@ const connectToMongo = async () => {
     }
 };
 connectToMongo();
-
-const fileUpload = require('express-fileupload');
-
-app.use(fileUpload({
-    limits: { fileSize: 200 * 1024 * 1024 }, 
-    useTempFiles: true,
-    tempFileDir: '../temp/videoUploads',
-}));
 
 // Health check route
 app.get('/health', (req, res) => {
