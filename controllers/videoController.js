@@ -4,7 +4,6 @@ ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
 
 
 const fs = require('fs');
-const { createReadStream, unlinkSync } = require('fs');
 const { createReadStream } = require('fs');
 const path = require('path');
 require('dotenv').config()
