@@ -41,6 +41,7 @@ module.exports = {
             }
 
             console.log('[MP4 > MP3] File Obtained.');
+            io.emit('progress', { percent: 0, message: 'File recieved' })
             
             const inputFilePath = file.path;
             const outputPath = path.join(
