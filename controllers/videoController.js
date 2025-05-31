@@ -29,11 +29,11 @@ module.exports = {
     },
 
     async videoToMp3(req, res, next) {
+        console.log('[MP4 > MP3] Request received at:', new Date().toISOString());
         const io = req.app.get('io');
         const file = req.file
 
         try {
-            console.log('[MP4 > MP3] Request received at:', new Date().toISOString());
             
             if (!req.file) {
                 io.emit('error', { message: 'No file uploaded' })
@@ -41,6 +41,7 @@ module.exports = {
             }
 
             console.log('[MP4 > MP3] File Obtained.');
+            io.emit('progress', { percent: 0, message: 'File recieved' })
             
             const inputFilePath = file.path;
             const outputPath = path.join(
