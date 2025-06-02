@@ -1,4 +1,5 @@
 const axios = require('axios')
+const { ytsearch } = require('ruhend-scraper')
 
 const clientId = process.env.SPOTIFY_CLIENT_ID;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
@@ -113,6 +114,7 @@ module.exports = {
             console.log('[Spotify] Link obtained: ', spotifyUrl);
 
             // get ID out of URL
+            // Look for literal text 'track', then capture 22 characters that are either letters or numbers
             const trackIdMatch = spotifyUrl.match(/track\/([a-zA-Z0-9]{22})/);
             if (!trackIdMatch) {
                 return res.status(400).send('Invalid Spotify track URL');
@@ -170,5 +172,42 @@ module.exports = {
             console.error('Error fetching track information:', error);
             res.status(500).send('Failed to fetch track information');
         }
+    },
+
+    async downloadMp3(req, res, next){
+
+        try {
+            const spotifyUrl = req.body.link;
+            console.log('[Spotify > MP3] Link obtained: ', spotifyUrl);
+    
+            const trackIdMatch = spotifyUrl.match(/track\/([a-zA-Z0-9]{22})/);
+            if(!trackIdMatch){
+                return res.status(400).send('[Spotify > MP3] Invalid Spotify track URL')
+            };
+    
+            const trackId = trackIdMatch[1];
+            console.log('[Spotify > MP3] Track ID obtained');
+    
+            console.log('[Spotify > MP3] Searching for Track ID via Spotify');
+            const response = await getTrackInfo(trackId);
+            const trackName = response.name;
+            console.log('[Spotify > MP3] Track name obtained: ', trackName)
+
+            console.log('[Spotify > MP3] Searching for track via YouTube')
+            const youtubeData = await ytsearch(trackName)
+            const videoId = youtubeData.video[0].videoId;
+            console.log('[Spotify > MP3] YouTube ID found, sending back to user: ', videoId);
+
+            res.status(200).send(videoId)
+
+        } catch (error) {
+            if (error === 401){
+                getAccessToken(clientId, clientSecret, tokenUrl)
+                return ('/downloadMp3').post(req, res)
+            };
+            console.log('[Spotify > MP3] Error downloading MP3')
+            res.status(500).send('[Spotify > MP3] Failed to download MP3')
+        }
+
     }
-    }
+}

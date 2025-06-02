@@ -11,5 +11,7 @@ module.exports = () => {
 
     router.post('/playlistInfo', SpotifyController.getPlaylist)
 
+    router.post('/downloadMp3', SpotifyController.downloadMp3)
+
     return router
 }
