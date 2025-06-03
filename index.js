@@ -1,33 +1,41 @@
+require('dotenv').config()
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const urlController = require('./controllers/urlController.js')
 const fs = require('fs')
 const path = require('path')
 const mongoose = require('mongoose');
 const http = require('http');
 const { Server } = require('socket.io')
 
+const urlController = require('./controllers/urlController.js')
+
+const DiscordBot = require('./server/DiscordBot.js');
+
+
 const app = express();
+
+DiscordBot();
+
 
 // Create http server, initialize socket.io with the http server
 const server = http.createServer(app);
 
 // CHANGE ORIGINS TO FRONTEND ADDRESS
 
-const io = new Server(server, {
-    cors: {
-        origin: "https://linkify.gg",
-        methods: ["GET", "POST"],
-        credentials: true
-    }
-})
+// const io = new Server(server, {
+//     cors: {
+//         origin: "https://linkify.gg",
+//         methods: ["GET", "POST"],
+//         credentials: true
+//     }
+// })
 
-app.use(cors({ 
-    origin: "https://linkify.gg",  
-    methods: ["GET", "POST"],
-    credentials: true
-}));
+// app.use(cors({ 
+//     origin: "https://linkify.gg",  
+//     methods: ["GET", "POST"],
+//     credentials: true
+// }));
 
 // const io = new Server(server, {
 //     cors: {
@@ -43,16 +51,16 @@ app.use(cors({
 // }));
 
 
-// const io = new Server(server, {
-//     cors: {
-//         origin: "http://localhost:5173",
-//         methods: ["GET", "POST"],
-//     }
-// })
-// app.use(cors({ 
-//     origin: "http://localhost:5173",  
-//     methods: ["GET", "POST"],
-// }));
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST"],
+    }
+})
+app.use(cors({ 
+    origin: "http://localhost:5173",  
+    methods: ["GET", "POST"],
+}));
 
 
 // make io accessable
@@ -63,7 +71,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.set('trust proxy', 1);
 
-require('dotenv').config();
 
 // event handlers for socket
 io.on('connection', (socket) => {

@@ -1,6 +1,6 @@
 const ffmpeg = require('fluent-ffmpeg');
-ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
-// ffmpeg.setFfmpegPath('C:/Program Files/ffmpeg/bin/ffmpeg.exe');
+// ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
+ffmpeg.setFfmpegPath('C:/Program Files/ffmpeg/bin/ffmpeg.exe');
 
 
 const fs = require('fs');
@@ -10,13 +10,15 @@ require('dotenv').config()
 
 const { Upload } = require('@aws-sdk/lib-storage');
 const { s3Client } = require('../server/s3');
-const { GetObjectCommand } = require('@aws-sdk/client-s3');
+const { GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 
 const now = new Date();
 const hours = now.getHours().toString().padStart(2, '0');
 const minutes = now.getMinutes().toString().padStart(2, '0');
 const seconds = now.getSeconds().toString().padStart(2, '0')
 const currentTime = `${hours}:${minutes} ${seconds}s`;
+
+
 
 
 module.exports = {
@@ -32,6 +34,21 @@ module.exports = {
         console.log('[MP4 > MP3] Request received at:', new Date().toISOString());
         const io = req.app.get('io');
         const file = req.file
+        
+        // create our key for S3, the time along with the files name
+        const s3Key = `${currentTime}-${file.originalname}`;
+
+        async function s3Cleanup(){
+            try {
+                await s3Client.send(new DeleteObjectCommand({
+                Bucket: process.env.AWS_S3_BUCKET_NAME,
+                Key: s3Key,
+                }))
+                console.log('[MP4 > MP3] S3 Cleanup complete')
+            } catch (error) {
+                console.log('[MP4 > MP3] Error during s3 cleanup')
+            }
+        }
 
         try {
             
@@ -53,8 +70,6 @@ module.exports = {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             console.log('[MP4 > MP3] Contacting Server for Upload.');
-            // create our key for S3, the time along with the files name
-            const s3Key = `${currentTime}-${file.originalname}`;
 
             try {
                 // create a readable stream from the file that was uploaded by the user
@@ -136,6 +151,7 @@ module.exports = {
                     // Clean up the og uploaded file and the S3 downloaded file
                     fs.unlinkSync(inputFilePath);
                     fs.unlinkSync(s3DownloadPath);
+                    s3Cleanup()
                     
                     // Send the converted file
                     io.emit('progress', { percent: 100, message: 'Complete!' });
@@ -157,6 +173,7 @@ module.exports = {
                     fs.unlinkSync(inputFilePath);
                     fs.unlinkSync(s3DownloadPath);
                     fs.unlinkSync(outputPath)
+                    s3Cleanup()
                     return res.status(500).send('FFmpeg processing failed');
                 });
 
