@@ -11,6 +11,7 @@ function DiscordBot() {
         ] 
     });
     client.login(token)
+    console.log('{ UPDATE BOT } Online')
     
     // Capture the messages real-time
     client.on('messageCreate', message => {
