@@ -192,5 +192,68 @@ module.exports = {
         }
     },
 
+
+        async videoToMp3v2(req, res, next) {
+        const io = req.app.get('io');
+        try {
+            const file = req.file;
+            if (!file) {
+                io.emit('error', { message: 'No file uploaded'})
+                return res.status(400).send('No file uploaded');
+            } else {
+                console.log(`File obtained: ${file.originalname}`);
+            }
+
+            io.emit('progess', { percent: 0, message: 'File recieved'})
+
+            const originalName = file.originalname;
+            // REMEMBER!! parse within path will remove the extension name
+            const baseName = path.parse(originalName).name;
+            
+            const tempFilePath = file.path;
+
+            console.log('Temp file path: ', tempFilePath)
+
+
+            const outputPath = path.join(path.dirname(tempFilePath), file.filename + '.mp3');
+
+            io.emit('progress', { percent: 40, message: 'Initiating FFMPEG process'})
+            ffmpeg(tempFilePath)
+                .noVideo()
+                .audioCodec('libmp3lame')
+                .format('mp3')  
+                .save(outputPath)
+                .on('end', () => {
+                    console.log('Audio Extracted for: ', file.originalname);
+                    
+                    res.download(outputPath, `${baseName}.mp3`, (error) => {
+                        if (error) {
+                          console.error('Download error:', error);
+                          return res.status(500).send('Error downloading file');
+                        }
+                      });
+                    io.emit('progress', { percent: 100, message: 'Complete!' });
+                      
+                      res.on('finish', () => {
+                        try {
+                          fs.unlinkSync(tempFilePath);
+                          fs.unlinkSync(outputPath);
+                          console.log('Files successfully deleted');
+                        } catch (cleanupError) {
+                          console.error('Error during cleanup:', cleanupError);
+                        }
+                      });
+                })
+                .on('error', (error) => {
+                    console.error('Error during conversion:', error);
+                    io.emit('error', {message: 'Conversion failed' })
+                    res.status(500).send(`Error download file: ${error.message}`);
+                });
+
+        } catch (error) {
+            console.error('Unexpected error:', error);
+            return res.status(500).send('Internal Server Error');
+        }
+    },
     
 }

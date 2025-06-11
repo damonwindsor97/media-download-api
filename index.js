@@ -23,19 +23,19 @@ const server = http.createServer(app);
 
 // CHANGE ORIGINS TO FRONTEND ADDRESS
 
-const io = new Server(server, {
-    cors: {
-        origin: "https://linkify.gg",
-        methods: ["GET", "POST"],
-        credentials: true
-    }
-})
+// const io = new Server(server, {
+//     cors: {
+//         origin: "https://linkify.gg",
+//         methods: ["GET", "POST"],
+//         credentials: true
+//     }
+// })
 
-app.use(cors({ 
-    origin: "https://linkify.gg",  
-    methods: ["GET", "POST"],
-    credentials: true
-}));
+// app.use(cors({ 
+//     origin: "https://linkify.gg",  
+//     methods: ["GET", "POST"],
+//     credentials: true
+// }));
 
 // const io = new Server(server, {
 //     cors: {
@@ -51,16 +51,16 @@ app.use(cors({
 // }));
 
 
-// const io = new Server(server, {
-//     cors: {
-//         origin: "http://localhost:5173",
-//         methods: ["GET", "POST"],
-//     }
-// })
-// app.use(cors({ 
-//     origin: "http://localhost:5173",  
-//     methods: ["GET", "POST"],
-// }));
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST"],
+    }
+})
+app.use(cors({ 
+    origin: "http://localhost:5173",  
+    methods: ["GET", "POST"],
+}));
 
 
 // make io accessable
