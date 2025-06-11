@@ -37,30 +37,30 @@ const server = http.createServer(app);
 //     credentials: true
 // }));
 
-const io = new Server(server, {
-    cors: {
-        origin: "https://dev-linkify-gg.onrender.com",
-        methods: ["GET", "POST"],
-        credentials: true
-    }
-})
-app.use(cors({ 
-    origin: "https://dev-linkify-gg.onrender.com",  
-    methods: ["GET", "POST"],
-    credentials: true
-}));
-
-
 // const io = new Server(server, {
 //     cors: {
-//         origin: "http://localhost:5173",
+//         origin: "https://dev-linkify-gg.onrender.com",
 //         methods: ["GET", "POST"],
+//         credentials: true
 //     }
 // })
 // app.use(cors({ 
-//     origin: "http://localhost:5173",  
+//     origin: "https://dev-linkify-gg.onrender.com",  
 //     methods: ["GET", "POST"],
+//     credentials: true
 // }));
+
+
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST"],
+    }
+})
+app.use(cors({ 
+    origin: "http://localhost:5173",  
+    methods: ["GET", "POST"],
+}));
 
 
 // make io accessable
