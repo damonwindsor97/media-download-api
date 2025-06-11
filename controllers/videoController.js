@@ -1,6 +1,6 @@
 const ffmpeg = require('fluent-ffmpeg');
-// ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
-ffmpeg.setFfmpegPath('C:/Program Files/ffmpeg/bin/ffmpeg.exe');
+ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
+// ffmpeg.setFfmpegPath('C:/Program Files/ffmpeg/bin/ffmpeg.exe');
 
 
 const fs = require('fs');
