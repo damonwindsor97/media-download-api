@@ -182,7 +182,9 @@ module.exports = {
     
             const trackIdMatch = spotifyUrl.match(/track\/([a-zA-Z0-9]{22})/);
             if(!trackIdMatch){
-                return res.status(400).send('[Spotify > MP3] Invalid Spotify track URL')
+                res.status(400).send('Invalid Spotify track URL')
+                console.log('[Spotify > MP3] Invalid Spotify track URL')
+                return
             };
     
             const trackId = trackIdMatch[1];
@@ -190,11 +192,17 @@ module.exports = {
     
             console.log('[Spotify > MP3] Searching for Track ID via Spotify');
             const response = await getTrackInfo(trackId);
+
+            const artistName = response.artists[0].name
             const trackName = response.name;
+
             console.log('[Spotify > MP3] Track name obtained: ', trackName)
+            console.log('[Spotify > MP3] Artist name obtained: ', artistName)
+            const fullTrack = `${artistName} - ${trackName}`
+            console.log('[Spotify > MP3] Full track: ', fullTrack)
 
             console.log('[Spotify > MP3] Searching for track via YouTube')
-            const youtubeData = await ytsearch(trackName)
+            const youtubeData = await ytsearch(fullTrack)
             const videoId = youtubeData.video[0].videoId;
             console.log('[Spotify > MP3] YouTube ID found, sending back to user: ', videoId);
 
