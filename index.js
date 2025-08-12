@@ -21,19 +21,11 @@ const server = http.createServer(app);
 
 // CHANGE ORIGINS TO FRONTEND ADDRESS
 
-// const io = new Server(server, {
-//     cors: {
-//         origin: "https://linkify.gg",
-//           methods: ["GET", "POST", "DELETE"],
-//         credentials: true
-//     }
-// })
-
-// app.use(cors({ 
-//     origin: "https://linkify.gg",  
-//         methods: ["GET", "POST", "DELETE"],
-//     credentials: true
-// }));
+app.use(cors({ 
+    origin: "https://linkify.gg",  
+        methods: ["GET", "POST", "DELETE"],
+    credentials: true
+}));
 
 
 // const io = new Server(server, {
@@ -50,21 +42,18 @@ const server = http.createServer(app);
 //  }));
 
 
-const io = new Server(server, {
-    cors: {
-        origin: "http://localhost:5173",
-    methods: ["GET", "POST", "DELETE"],
-    }
-})
-app.use(cors({ 
-    origin: "http://localhost:5173",  
-    methods: ["GET", "POST", "DELETE"],
-    credentials: true,
-}));
+// const io = new Server(server, {
+//     cors: {
+//         origin: "http://localhost:5173",
+//     methods: ["GET", "POST", "DELETE"],
+//     }
+// })
+// app.use(cors({ 
+//     origin: "http://localhost:5173",  
+//     methods: ["GET", "POST", "DELETE"],
+//     credentials: true,
+// }));
 
-
-// make io accessable
-app.set('io', io)
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -74,15 +63,6 @@ app.use(cookieParser());
 app.use(anonToken);
 
 DiscordBot();
-
-// event handlers for socket
-io.on('connection', (socket) => {
-    console.log('Socket Client connected:', socket.id);
-    
-    socket.on('disconnect', () => {
-        console.log('Socket Client disconnected:', socket.id);
-    });
-});
 
 // Making sure we have a temp folder
 const tempDir = path.join(__dirname, 'temp');
