@@ -11,7 +11,7 @@ module.exports = () => {
 
     router.post('/getTitle', YoutubeController.getTitle);
 
-    router.post('/downloadMp3', YoutubeController.downloadMp3)
+    // router.post('/downloadMp3', YoutubeController.downloadMp3)
 
     router.post('/downloadMp4', YoutubeController.downloadMp4)
 

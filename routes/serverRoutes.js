@@ -5,9 +5,15 @@ const ServerController = require('../controllers/serverController')
 
 module.exports = () => {
 
-    router.get('/updates', ServerController.getDiscordUpdates)
+    router.get('/token', ServerController.getAnonToken)
 
+    router.get('/anonUtilHistory', ServerController.getAnonHistory)
 
+    router.get('/genSignedUrl', ServerController.generateSignedUrl)
+
+    router.get('/downloadSignedUrl', ServerController.downloadSignedUrl);
+
+    router.delete('/deleteS3Object', ServerController.deleteSignedUrl)
 
     return router
 }

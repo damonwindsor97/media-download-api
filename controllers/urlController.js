@@ -1,10 +1,10 @@
-const axios = require('axios')
+ const axios = require('axios')
 const URL = require('../server/models/Urls')
+const AnonUsers = require('../server/models/AnonUsers');
 
 const { customAlphabet } = require('nanoid-cjs');
 const nanoid = customAlphabet('1234567890abcdef', 10);
 
-const shortId = nanoid();
 
 module.exports = {
 
@@ -34,14 +34,42 @@ module.exports = {
         }
     
         try {
-            console.log('[URL] Checking to see if URL exists in db')
-            // First check if URL already exists
+            const token = req.cookies?.anon_token;
+            const user = await AnonUsers .findOne({ token })
+            
+            if(user && user.utilityHistory >= 50){
+                return res.status(403).json({ error: 'Usage limit reached, please wait till your user expires'})
+            }
+
+            if(!user){
+                return res.status(400).json({ error:'No guest user found, contact admin'})
+            }
+
+            console.log('[URL] Checking to see if URL exists in db') 
+
             let url = await URL.findOne({ originalUrl: req.body.url }).exec();
             if (url) {
                 console.log('[URL] URL found in db, sending to user')
+
+                console.log('[URL] Creating item for usage history')
+                const usageItem = {
+                    type: 'URL Shortener',
+                    timestamp: new Date(),
+                    details: {
+                        originalUrl: url.originalUrl,
+                        shortUrl: `${process.env.URL.replace(/\/$/, '')}/${url.slug}`,
+                    }
+                };
+                console.log('[URL] Updating Anon user with usage history')
+                await AnonUsers.findOneAndUpdate(
+                    { token },
+                    { $push: { utilityHistory: usageItem } },
+                    { new: true, upsert: true}
+                )
+
                 return res.json({
                     short: `${process.env.URL.replace(/\/$/, '')}/${url.slug}`,
-                    originalUrl: url.originalUrl
+                    originalUrl: url.originalUrl,
                 });
             }
     
@@ -78,18 +106,38 @@ module.exports = {
     
             // Create new short URL
             console.log('[URL] Creating new slug/short url id')
-            const slug = shortId;
+            const slug = nanoid();;
             const newUrl = await URL.create({
                 originalUrl: req.body.url,
                 slug: slug,
                 createdAt: new Date()
             });
+
+
+            const usageItem = {
+                type: 'url',
+                timestamp: new Date(),
+                details: {
+                    originalUrl: newUrl.originalUrl,
+                    shortUrl: `${process.env.URL.replace(/\/$/, '')}/${newUrl.slug}`,
+                    inputFileName: 'N/A',
+                    duration: null,
+                }
+            };
+
+           await AnonUsers.findOneAndUpdate(
+                { token },
+                { $push: { utilityHistory: usageItem } },
+                { new: true, upsert: true}
+            )
+            
             
             // return the response in JSON, containing the short link which contains our server URL & the slug, OGlink and link status
             return res.json({
                 short: `${process.env.URL.replace(/\/$/, '')}/${newUrl.slug}`,
                 originalUrl: newUrl.originalUrl,
-                status: response.status
+                status: response.status,
+                utilityHistory: user.utilityHistory
             });
             
         } catch (error) {

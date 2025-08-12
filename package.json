@@ -1,12 +1,15 @@
 {
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.799.0",
+    "@aws-sdk/client-s3": "^3.858.0",
     "@aws-sdk/lib-storage": "^3.808.0",
+    "@aws-sdk/s3-request-presigner": "^3.858.0",
     "@aws-sdk/url-parser-node": "^3.1.0",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.7.4",
     "child_process": "^1.0.2",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "discord.js": "^14.19.3",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",

@@ -1,10 +1,13 @@
 const axios = require('axios')
 const { ytsearch } = require('ruhend-scraper')
+const AnonUser = require('../server/models/AnonUsers');
 
 const clientId = process.env.SPOTIFY_CLIENT_ID;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 const tokenUrl = 'https://accounts.spotify.com/api/token';
 let spotifyToken = null;
+
+const AnonUsers = require('../server/models/AnonUsers.js');
 
 // Function to get Access Token for Spotify - function came from Spotify, just tweaked
 async function getAccessToken() {
@@ -30,14 +33,14 @@ async function getAccessToken() {
         console.log('[Spot TOKEN] New token obtained');
         return spotifyToken;
     } catch (error) {
-        console.error('[Spot TOKEN] Error getting access token:', error);
+        console.error('[Spotify TOKEN] Error getting access token:', error);
         throw error;
     }
 }
 
 getAccessToken()
   .then(token => {
-    console.log('Access token:', token);
+    console.log('[Spotify TOKEN] Access token:', token);
   })
   .catch(error => {
     console.error('Error:', error);
@@ -72,6 +75,7 @@ async function getTrackInfo(trackId) {
 
 async function getPlaylistInfo(playlistId) {
     try {
+
         // Check to see if there's a token available, if there isnt then create one
         if (!spotifyToken) {
             console.log('[Spot TOKEN] No token available, obtaining new token');
@@ -83,6 +87,7 @@ async function getPlaylistInfo(playlistId) {
                 Authorization: `Bearer ${spotifyToken}`
             }
         });
+
         return response.data;
     } catch (error) {
         // If the error response and status equals a 401, generate a new token
@@ -139,8 +144,19 @@ module.exports = {
 
     async getPlaylist(req, res, next){
         try {
+            const token = req.cookies?.anon_token;
+            const user = await AnonUser.findOne({ token });
+        
+            if(user && user.utilityHistory >= 50){
+                return res.status(403).json({ error: 'Usage limit reached, please wait till your user expires'})
+            }
+
+            if(!user){
+                return res.status(400).json({ error:'No guest user found, contact admin'})
+            }
+
             const spotifyUrl = req.body.link;
-            console.log('[Spotify] Playlist ID obtained')
+            console.log('[Spotify > txt] Playlist ID obtained')
     
             const playlistIdMatch = spotifyUrl.match(/playlist\/([a-zA-Z0-9]{22})/);
             if (!playlistIdMatch){
@@ -148,9 +164,9 @@ module.exports = {
             };
     
             const playlistId = playlistIdMatch[1];
-            console.log('[Spotify] Track ID obtained')
+            console.log('[Spotify > txt]Track ID obtained')
     
-            console.log('[Spotify] Searching for Playlist ID via Spotify')
+            console.log('[Spotify > txt]Searching for Playlist ID via Spotify')
             const response = await getPlaylistInfo(playlistId)
     
             // Map through and grab title of each song
@@ -159,12 +175,28 @@ module.exports = {
             const artists = response.tracks.items.map(item => item.track.artists.map(artist => artist.name).join(', '))
     
             // Putting each response onto a new line + nice format
-            const formattedResponse = artists.map((artists, index) => `Artist: ${artists} - Song: ${titles[index]}`).join('\n');
+            const formattedResponse = artists.map((artists, index) => `Track: ${artists} - ${titles[index]}`).join('\n');
     
-            // Send to user as plain text
+            console.log('[Spotify > txt] Creating item for usage history')
+            const usageItem = {
+                type: 'Spotify Playlist to .txt Converter',
+                timestamp: new Date(),
+                details: {
+                    playlistName: response.name,
+                    playlistUrl: response.external_urls.spotify,
+                }
+            };
+
+            console.log('[Spotify > txt] Updating Anon user with usage history');
+            await AnonUser.findOneAndUpdate(
+                { token },
+                { $push: { utilityHistory: usageItem } },
+                { new: true, upsert: true }
+            )
+
+
             res.type('text/plain').send(formattedResponse); 
         } catch (error) {
-            // If we get a 401, we run the getToken function and rerun the request
             if (error === 401){
                 getAccessToken(clientId, clientSecret, tokenUrl)
                 return ('/getTitle').post(req, res)
@@ -177,6 +209,16 @@ module.exports = {
     async downloadMp3(req, res, next){
 
         try {
+            const token = req.cookies?.anon_token;
+            const user = await AnonUser.findOne({ token })
+            
+            if(user && user.utilityHistory >= 50){
+                return res.status(403).json({ error: 'Usage limit reached, please wait till your user expires'})
+            }
+
+            if(!user){
+                return res.status(400).json({ error:'No guest user found, contact admin'})
+            }
             const spotifyUrl = req.body.link;
             console.log('[Spotify > MP3] Link obtained: ', spotifyUrl);
     
@@ -192,6 +234,7 @@ module.exports = {
     
             console.log('[Spotify > MP3] Searching for Track ID via Spotify');
             const response = await getTrackInfo(trackId);
+            console.log(response)
 
             const artistName = response.artists[0].name
             const trackName = response.name;
@@ -204,8 +247,24 @@ module.exports = {
             console.log('[Spotify > MP3] Searching for track via YouTube')
             const youtubeData = await ytsearch(fullTrack)
             const videoId = youtubeData.video[0].videoId;
-            console.log('[Spotify > MP3] YouTube ID found, sending back to user: ', videoId);
 
+            const usageItem = {
+                type: 'Spotify > mp3 Converter',
+                timestamp: new Date(),
+                details: {
+                    title: fullTrack,
+                    source: spotifyUrl,
+                    duration: response.duration_ms
+                }
+            };
+
+            await AnonUsers.findOneAndUpdate(
+                { token },
+                { $push: { utilityHistory: usageItem } },
+                { new: true, upsert: true }
+            )
+
+            console.log('[Spotify > MP3] YouTube ID found, sending back to user: ', videoId);
             res.status(200).send(videoId)
 
         } catch (error) {

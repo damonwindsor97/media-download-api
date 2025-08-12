@@ -7,60 +7,60 @@ const path = require('path')
 const mongoose = require('mongoose');
 const http = require('http');
 const { Server } = require('socket.io')
+const cookieParser = require('cookie-parser');
 
 const urlController = require('./controllers/urlController.js')
 
 const DiscordBot = require('./server/DiscordBot.js');
-
+const anonToken = require('./middleware/anonToken.js')
 
 const app = express();
-
-DiscordBot();
-
 
 // Create http server, initialize socket.io with the http server
 const server = http.createServer(app);
 
 // CHANGE ORIGINS TO FRONTEND ADDRESS
 
-const io = new Server(server, {
-    cors: {
-        origin: "https://linkify.gg",
-        methods: ["GET", "POST"],
-        credentials: true
-    }
-})
-
-app.use(cors({ 
-    origin: "https://linkify.gg",  
-    methods: ["GET", "POST"],
-    credentials: true
-}));
-
 // const io = new Server(server, {
 //     cors: {
-//         origin: "https://dev-linkify-gg.onrender.com",
-//         methods: ["GET", "POST"],
+//         origin: "https://linkify.gg",
+//           methods: ["GET", "POST", "DELETE"],
 //         credentials: true
 //     }
 // })
+
 // app.use(cors({ 
-//     origin: "https://dev-linkify-gg.onrender.com",  
-//     methods: ["GET", "POST"],
+//     origin: "https://linkify.gg",  
+//         methods: ["GET", "POST", "DELETE"],
 //     credentials: true
 // }));
 
 
 // const io = new Server(server, {
 //     cors: {
-//         origin: "http://localhost:5173",
-//         methods: ["GET", "POST"],
+//         origin: "https://dev-linkify-gg.onrender.com",
+//             methods: ["GET", "POST", "DELETE"],
+//         credentials: true
 //     }
 // })
 // app.use(cors({ 
-//     origin: "http://localhost:5173",  
-//     methods: ["GET", "POST"],
-// }));
+//     origin: "https://dev-linkify-gg.onrender.com",  
+//   methods: ["GET", "POST", "DELETE"],
+//      credentials: true
+//  }));
+
+
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:5173",
+    methods: ["GET", "POST", "DELETE"],
+    }
+})
+app.use(cors({ 
+    origin: "http://localhost:5173",  
+    methods: ["GET", "POST", "DELETE"],
+    credentials: true,
+}));
 
 
 // make io accessable
@@ -70,7 +70,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.set('trust proxy', 1);
+app.use(cookieParser());
+app.use(anonToken);
 
+DiscordBot();
 
 // event handlers for socket
 io.on('connection', (socket) => {
@@ -101,6 +104,10 @@ const connectToMongo = async () => {
 };
 connectToMongo();
 
+app.get('/test', async (req, res) => {
+    res.json({ token: req.anon_token, message: 'Working'})
+})
+
 // Health check route
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK' });
@@ -108,7 +115,8 @@ app.get('/health', (req, res) => {
 
 // API routes
 const routes = require('./routes/routes.js');
-app.use('/api/v1', routes());
+app.use('/api/v2-1', routes());
+
 
 // Redirect route - This must be after API routes
 app.get('/:slug', urlController.getSlug);
@@ -118,7 +126,7 @@ app.get('/', (req, res) => {
 });
 
 app.use((req, res) => {
-    res.status(404).send('endpoint no available');
+    res.status(404).send('endpoint not available');
 });
 
 app.use((err, req, res, next) => {

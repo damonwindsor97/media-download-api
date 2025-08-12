@@ -1,6 +1,7 @@
 
 const { ytmp3, ytmp4 } = require('ruhend-scraper')
 const fetch = require('node-fetch')
+const AnonUsers = require('../server/models/AnonUsers.js');
 
 
 module.exports = {
@@ -47,41 +48,44 @@ module.exports = {
         }
     },
 
-    async downloadMp3(req, res, next) {
-        try {
-            const videoUrl = req.body.link;
-            console.log('[YT>MP3] Link obtained')
+    // async downloadMp3(req, res, next) {
+    //     try {
+    //         const videoUrl = req.body.link;
+    //         console.log('[YT>MP3] Link obtained')
     
-            console.log('[YT>MP3] Awaiting response from scraper...')
-            const response = await ytmp3(videoUrl);
-            const audioUrl = response.audio;
-            const audioTitle = response.title;
+    //         console.log('[YT>MP3] Awaiting response from scraper...')
+    //         const response = await ytmp3(videoUrl);
+    //         const audioUrl = response.audio;
+    //         const audioTitle = response.title;
+    //         const audioDuration = response.duration;
     
-            console.log('[YT>MP3] Fetching response from audio URL...')
-            const audioResponse = await fetch(audioUrl);
-            if (!audioResponse.ok) {
-                throw new Error('Failed to fetch audio file');
-            }
+    //         console.log('[YT>MP3] Fetching response from audio URL...')
+    //         const audioResponse = await fetch(audioUrl);
+    //         if (!audioResponse.ok) {
+    //             throw new Error('Failed to fetch audio file');
+    //         }
     
-            console.log('[YT>MP3] Setting Headers...')
-            res.setHeader('Content-Type', 'audio/mpeg');
-            res.setHeader('Content-Disposition', `attachment; filename="${audioTitle}.mp3"`);
-            res.setHeader('X-Audio-Title', audioTitle);
+    //         console.log('[YT>MP3] Setting Headers...')
+    //         res.setHeader('Content-Type', 'audio/mpeg');
+    //         res.setHeader('Content-Disposition', `attachment; filename="${audioTitle}.mp3"`);
+    //         res.setHeader('X-Audio-Title', audioTitle);
             
-            console.log('[YT>MP3] Awaiting audio response buffer...')
-            const audioBuffer = await audioResponse.buffer();
+    //         console.log('[YT>MP3] Awaiting audio response buffer...')
+    //         const audioBuffer = await audioResponse.buffer();
     
-            console.log('[YT>MP3] Sending audio to user...')
-            res.status(200).send(audioBuffer);
-        } catch (error) {
-            console.log(error)
-            res.status(400).send(error)
-        }
-    },
+
+    //         console.log('[YT>MP3] Sending audio to user...')
+    //         res.status(200).send(audioBuffer);
+    //     } catch (error) {
+    //         console.log(error)
+    //         res.status(400).send(error)
+    //     }
+    // },
 
 
     async downloadMp4(req, res, next){
         try {
+
             const videoUrl = req.body.link;
             console.log('[YT>MP4] Link obtained')
     
@@ -89,6 +93,7 @@ module.exports = {
             const response = await ytmp4(videoUrl);
             const dataUrl = response.video;
             const videoTitle = response.title;
+            const videoDuration = response.duration; 
     
             console.log('[YT>MP4] Fetching response from video URL...')
             const videoResponse = await fetch(dataUrl);
@@ -104,6 +109,7 @@ module.exports = {
             console.log('[YT>MP4] Awaiting video response buffer...')
             const videoBuffer = await videoResponse.buffer();
     
+
             console.log('[YT>MP4] Sending video to user...')
             res.status(200).send(videoBuffer);
         } catch (error) {
