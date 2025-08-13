@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const fs = require('fs')
 const path = require('path')
 const mongoose = require('mongoose');
+const http = require('http');
 const cookieParser = require('cookie-parser');
 
 const urlController = require('./controllers/urlController.js')
@@ -13,6 +14,9 @@ const DiscordBot = require('./server/DiscordBot.js');
 const anonToken = require('./middleware/anonToken.js')
 
 const app = express();
+
+// Create http server, initialize socket.io with the http server
+const server = http.createServer(app);
 
 // CHANGE ORIGINS TO FRONTEND ADDRESS
 
