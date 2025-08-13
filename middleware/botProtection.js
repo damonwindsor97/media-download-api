@@ -1,6 +1,17 @@
 // Middleware to block bots at the route level
 const botProtection = (req, res, next) => {
     const userAgent = req.headers['user-agent'] || '';
+
+    // Block health checks from creating tokens
+    if (req.path === '/' && (
+        userAgent.includes('render') || 
+        userAgent.includes('health') ||
+        userAgent.includes('monitor') ||
+        !req.headers.accept?.includes('text/html') 
+    )) {
+        console.log(`[HEALTH CHECK BLOCKED] ${userAgent} from ${req.ip}`);
+        return res.status(200).send('OK'); 
+    }
     
     // requests for suspicious PHP files
     const suspiciousExtensions = /\.(php|asp|jsp|cgi)$/i;
