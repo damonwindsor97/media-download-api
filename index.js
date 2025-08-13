@@ -4,13 +4,14 @@ const cors = require('cors');
 const morgan = require('morgan');
 const fs = require('fs')
 const path = require('path')
-const mongoose = require('mongoose');
 const http = require('http');
+const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 
 const urlController = require('./controllers/urlController.js')
 
 const DiscordBot = require('./server/DiscordBot.js');
+const botProtection = require('./middleware/botProtection.js')
 const anonToken = require('./middleware/anonToken.js')
 
 const app = express();
@@ -46,6 +47,7 @@ app.use(morgan('dev'));
 app.set('trust proxy', 1);
 app.use(cookieParser());
 app.use(anonToken);
+app.use(botProtection)
 
 DiscordBot();
 
