@@ -15,6 +15,7 @@ module.exports = {
 
 
     //  function to generate an anonymous token for the user
+
     async getAnonToken(req, res, next){
         let token = req.cookies?.anon_token;
 
@@ -28,9 +29,9 @@ module.exports = {
 
                 console.log('Setting cookie with token');
                 res.cookie('anon_token', token, {
-                httpOnly: true, 
-                sameSite: 'lax',
-                maxAge: 1000 * 60 * 60 * 24 * 7, 
+                    httpOnly: true, 
+                    sameSite: 'lax',
+                    maxAge: 1000 * 60 * 60 * 24 * 7, 
                 });
 
                 console.log('Successfully generated Anon token: ', token);
