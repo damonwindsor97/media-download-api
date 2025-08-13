@@ -16,6 +16,7 @@ const anonToken = require('./middleware/anonToken.js')
 
 const app = express();
 
+app.use(botProtection)
 // Create http server, initialize socket.io with the http server
 const server = http.createServer(app);
 
@@ -47,7 +48,6 @@ app.use(morgan('dev'));
 app.set('trust proxy', 1);
 app.use(cookieParser());
 app.use(anonToken);
-app.use(botProtection)
 
 DiscordBot();
 
