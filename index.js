@@ -23,7 +23,7 @@ const server = http.createServer(app);
 // CHANGE ORIGINS TO FRONTEND ADDRESS
 
 app.use(cors({ 
-    origin: "https://linkify.gg",  
+    origin: "https://convertforyou-website-prod.onrender.com",  
         methods: ["GET", "POST", "DELETE"],
     credentials: true
 }));
@@ -82,7 +82,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 const routes = require('./routes/routes.js');
-app.use('/api/v2-1', routes());
+app.use('/api/v2-2', routes());
 
 
 // Redirect route - This must be after API routes
