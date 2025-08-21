@@ -23,17 +23,10 @@ const server = http.createServer(app);
 // CHANGE ORIGINS TO FRONTEND ADDRESS
 
 app.use(cors({ 
-    origin: "https://convertforyou-website-prod.onrender.com",  
+    origin: ["https://convertforyou-website-prod.onrender.com", "https://www.convertforyou.com"],  
         methods: ["GET", "POST", "DELETE"],
     credentials: true
 }));
-
-
-// app.use(cors({ 
-//     origin: "https://dev-linkify-gg.onrender.com",  
-//   methods: ["GET", "POST", "DELETE"],
-//      credentials: true
-//  }));
 
 
 // app.use(cors({ 
