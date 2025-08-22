@@ -17,23 +17,21 @@ const anonToken = require('./middleware/anonToken.js')
 const app = express();
 
 app.use(botProtection)
-// Create http server, initialize socket.io with the http server
 const server = http.createServer(app);
-
-// CHANGE ORIGINS TO FRONTEND ADDRESS
-
-// app.use(cors({ 
-//     origin: ["https://convertforyou-website-prod.onrender.com", "https://www.convertforyou.com"],  
-//         methods: ["GET", "POST", "DELETE"],
-//     credentials: true
-// }));
 
 
 app.use(cors({ 
-    origin: "http://localhost:5173",  
-    methods: ["GET", "POST", "DELETE"],
-    credentials: true,
+    origin: ["https://convertforyou-website-prod.onrender.com", "https://www.convertforyou.com"],  
+        methods: ["GET", "POST", "DELETE"],
+    credentials: true
 }));
+
+
+// app.use(cors({ 
+//     origin: "http://localhost:5173",  
+//     methods: ["GET", "POST", "DELETE"],
+//     credentials: true,
+// }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
