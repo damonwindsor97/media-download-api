@@ -13,50 +13,35 @@ const uid = function(){
 
 module.exports = {
 
-
-    //  function to generate an anonymous token for the user
-
-    async getAnonToken(req, res, next){
-        let token = req.cookies?.anon_token;
-
+    async getAnonToken(req, res) {
         try {
-            if (!token) {
-                console.log('No Anon token found, generating...')
+            let token = req.cookies?.anon_token;
+
+            // If no token or invalid token, generate new one
+            if (!token || !(await AnonUser.findOne({ token }))) {
                 token = crypto.randomUUID();
                 
-                console.log('Saving token to database')
-                await AnonUser.create({ token });
-
-                console.log('Setting cookie with token');
-                res.cookie('anon_token', token, {
-                    httpOnly: true, 
-                    sameSite: 'lax',
-                    secure: true,
-                    maxAge: 1000 * 60 * 60 * 24 * 7, 
+                await AnonUser.create({ 
+                    token, 
+                    utilityHistory: [] 
                 });
 
-                console.log('Successfully generated Anon token: ', token);
-                req.anon_token = token;
-                
-                return res.status(200).send({ message: 'Anon token created', token });
-
-            } else {
-                const existingUser = await AnonUser.findOne({ token });
-
-                if (!existingUser) {
-                    console.log('Anon token not found in database, creating new one');
-                    await AnonUser.create({ token });
-                } else {
-                    console.log('Anon token already exists in database');
-                }
-                req.anon_token = token;
-                console.log('Using existing Anon token: ', token);
+                res.cookie('anon_token', token, {
+                    httpOnly: true,
+                    sameSite: 'lax',
+                    secure: true,
+                    maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
+                });
             }
 
-            res.status(200).send({ message: 'Anon token exists', token });
+            return res.status(200).json({ 
+                message: 'Token ready',
+                token 
+            });
+
         } catch (error) {
-            console.log(error)
-            res.status(500).json({ message: 'Internal server error' })
+            console.error('[Token Generation] Error:', error);
+            return res.status(500).json({ error: 'Failed to generate token' });
         }
     },
 

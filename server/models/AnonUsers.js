@@ -17,6 +17,14 @@ const anonUserSchema = new mongoose.Schema({
     utilityHistory: {
         type: Array,
         default: [],
+    },
+    lastSeenIP: {
+        type: String,
+        default: null
+    },
+    ipHistory: {
+        type: [String],
+        default: []
     }
 });
 

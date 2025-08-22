@@ -1,42 +1,62 @@
-// Middleware to block bots at the route level
 const botProtection = (req, res, next) => {
     const userAgent = req.headers['user-agent'] || '';
     const accept = req.headers.accept || '';
+    const path = req.path;
 
-    // Block health checks and non-browser requests
-    if (req.path === '/' && (
-        userAgent.includes('render') || 
+    // Block common scanner/vulnerability paths (from your logs)
+    const blockedPaths = [
+        '/actuator',
+        '/@vite',
+        '/server',
+        '/.env',
+        '/.git',
+        '/admin',
+        '/wp-admin',
+        '/wp-content',
+        '/phpmyadmin',
+        '/api/health',
+        '/health'
+    ];
+
+    // Check if path starts with any blocked path
+    if (blockedPaths.some(blocked => path.startsWith(blocked))) {
+        console.log(`[SCANNER BLOCKED] ${path} from ${req.ip} - ${userAgent}`);
+        return res.status(404).end();
+    }
+
+    // Block health checks on any path, not just root
+    if (userAgent.includes('render') || 
         userAgent.includes('health') ||
         userAgent.includes('monitor') ||
-        userAgent.includes('kuma') || // Common health checker
+        userAgent.includes('kuma') ||
         userAgent.includes('uptimerobot') ||
-        !accept || // No accept header
-        (!accept.includes('text/html') && !accept.includes('application/json'))
-    )) {
+        userAgent.includes('Chrome/108.0.0.0') || 
+        userAgent.includes('HTC One M9') 
+    ) {
         console.log(`[HEALTH CHECK BLOCKED] ${userAgent} from ${req.ip}`);
-        return res.status(200).send('OK'); 
+        return res.status(404).end(); 
     }
-    
-    // Block requests for suspicious PHP files
+
+    // Your existing suspicious file blocking (this is good)
     const suspiciousExtensions = /\.(php|asp|jsp|cgi)$/i;
-    if (suspiciousExtensions.test(req.path)) {
-        console.log(`[BOT BLOCKED] Suspicious file request: ${req.path} from ${req.ip}`);
+    if (suspiciousExtensions.test(path)) {
+        console.log(`[BOT BLOCKED] Suspicious file request: ${path} from ${req.ip}`);
         return res.status(404).end();
     }
-    
-    // Block known vulnerability scanner patterns
+
+    // Your existing scanner patterns (also good)
     const scannerPatterns = [
-        /wso|alfa|shell|c99|r57|b374k/i, // Web shells
-        /wp-admin|wp-content|wp-includes/i, // WordPress scans on non-WP sites
-        /templates\/beez/i, // Joomla scans
-        /admin\/phpmyadmin/i, // Database admin scans
+        /wso|alfa|shell|c99|r57|b374k/i,
+        /wp-admin|wp-content|wp-includes/i,
+        /templates\/beez/i,
+        /admin\/phpmyadmin/i,
     ];
     
-    if (scannerPatterns.some(pattern => pattern.test(req.path))) {
-        console.log(`[SCANNER BLOCKED] Vulnerability scan detected: ${req.path} from ${req.ip}`);
+    if (scannerPatterns.some(pattern => pattern.test(path))) {
+        console.log(`[SCANNER BLOCKED] Vulnerability scan detected: ${path} from ${req.ip}`);
         return res.status(404).end();
     }
-    
+
     next();
 };
 
