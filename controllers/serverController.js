@@ -17,21 +17,30 @@ module.exports = {
         try {
             let token = req.cookies?.anon_token;
 
-            // If no token or invalid token, generate new one
             if (!token || !(await AnonUser.findOne({ token }))) {
                 token = crypto.randomUUID();
                 
+                const ip = getIp(req); 
+
                 await AnonUser.create({ 
                     token, 
-                    utilityHistory: [] 
+                    utilityHistory: [],
+                    lastSeenIP: ip,
+                    ipHistory: [ip]
                 });
 
-                res.cookie('anon_token', token, {
+
+                const cookieOptions = {
                     httpOnly: true,
-                    sameSite: 'lax',
-                    secure: true,
-                    maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
-                });
+                    maxAge: 1000 * 60 * 60 * 24 * 7, 
+                    path: '/',
+                    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+                    secure: process.env.NODE_ENV === 'production', 
+                };
+
+                res.cookie('anon_token', token, cookieOptions);
+                
+                console.log(`[Token Generation] New token created for IP: ${ip}`);
             }
 
             return res.status(200).json({ 

@@ -17,19 +17,26 @@ async function anonToken(req, res, next) {
         if (token) {
             const exists = await AnonUser.findOne({ token });
             if (!exists) {
+                // Token exists in cookie but not in DB - clear it
                 res.clearCookie('anon_token');
                 token = null;
+                console.log('[Anon Token] Invalid token cleared');
+            } else {
+                // FIX 2: Token exists and is valid - update IP info
+                await AnonUser.findOneAndUpdate(
+                    { token },
+                    { 
+                        $set: { lastSeenIP: ip }, 
+                        $addToSet: { ipHistory: ip }
+                    }
+                );
+                console.log('[Anon Token] Updated IP history for token');
             }
-        } else {
-          await AnonUser.findOneAndUpdate(
-            { token },
-            { $set: { lastSeenIP: ip }, $addToSet: { ipHistory: ip} }
-          )
         }
-        
+
         req.anon_token = token;
         next();
-        
+
     } catch (error) {
         console.error('[Anon Token] Error:', error);
         next(error);
