@@ -94,7 +94,7 @@ module.exports = {
                 return res.status(400).json({ error: 'Anonymous user not found' });
             } 
             if (!userResponse.utilityHistory || userResponse.utilityHistory.length === 0) {
-                return res.status(400).json({ message: 'No utility history found' });
+                return res.status(200).json({ message: 'No utility history found' });
             }
 
             console.log('[AnonUser] Found user with token:', token);

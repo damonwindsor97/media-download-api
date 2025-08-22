@@ -22,7 +22,6 @@ async function anonToken(req, res, next) {
                 token = null;
                 console.log('[Anon Token] Invalid token cleared');
             } else {
-                // FIX 2: Token exists and is valid - update IP info
                 await AnonUser.findOneAndUpdate(
                     { token },
                     { 
