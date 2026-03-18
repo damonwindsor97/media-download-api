@@ -12,6 +12,9 @@ function DiscordBot() {
     client.login(token)
     console.log('{ DISCORD BOT } Online')
     
+
+
+    
 }
 
 module.exports = DiscordBot;

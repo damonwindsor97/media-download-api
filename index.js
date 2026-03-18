@@ -9,17 +9,17 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 
 const urlController = require('./controllers/urlController.js')
-const DiscordBot = require('./server/DiscordBot.js');
+const DiscordBot = require('./server/DiscordBot/DiscordBot.js');
 const botProtection = require('./middleware/botProtection.js')
 const anonToken = require('./middleware/anonToken.js')
 
 const app = express();
 const server = http.createServer(app);
 
-// CRITICAL FIX 1: Trust proxy MUST come before other middleware
+// Trust proxy MUST come before other middleware
 app.set('trust proxy', 1);
 
-// CRITICAL FIX 2: CORS must come BEFORE botProtection to handle preflight requests
+// CORS must come BEFORE botProtection to handle preflight requests
 // Dynamic CORS configuration for both dev and production
 const corsOptions = {
     origin: function (origin, callback) {
@@ -37,7 +37,7 @@ const corsOptions = {
             callback(null, true);
         } else {
             console.log(`[CORS] Blocked origin: ${origin}`);
-            // In production, you might want to allow the request but log it
+            // In production, you want to allow the request but log it
             // callback(null, true); // Uncomment this to allow but log
             callback(new Error('Not allowed by CORS'));
         }

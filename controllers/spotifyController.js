@@ -57,7 +57,7 @@ async function getTrackInfo(trackId) {
         // Make call to Spotify
         const response = await axios.get(`https://api.spotify.com/v1/tracks/${trackId}`, {
             headers: {
-                Authorization: `Bearer ${spotifyToken}`
+                Authorization: `Bearer ${spotifyToken}`,
             }
         });
         return response.data;
@@ -68,7 +68,7 @@ async function getTrackInfo(trackId) {
             await getAccessToken();
             return getTrackInfo(trackId);
         }
-        console.error('[Spot] Error in getTrackInfo:', error.message);
+        console.error('[Spot] Error in getTrackInfo function:', error.message);
         throw new Error(`Failed to get track info: ${error.message}`);
     }
 };
