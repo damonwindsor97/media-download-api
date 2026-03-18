@@ -1,5 +1,6 @@
 const axios = require('axios')
 const { ytsearch } = require('ruhend-scraper')
+const yts = require( 'yt-search' )
 const AnonUser = require('../server/models/AnonUsers');
 
 const clientId = process.env.SPOTIFY_CLIENT_ID;
@@ -245,8 +246,11 @@ module.exports = {
             console.log('[Spotify > MP3] Full track: ', fullTrack)
 
             console.log('[Spotify > MP3] Searching for track via YouTube')
-            const youtubeData = await ytsearch(fullTrack)
-            const videoId = youtubeData.video[0].videoId;
+            const youtubeData = await yts(fullTrack)
+            console.log('[Spotify > MP3] YouTube search results: ', youtubeData)
+            console.log('[Spotify > MP3] Attempting to grab video ID from YouTube search results')
+            const videoId = youtubeData.all[0]?.videoId;
+            console.log('[Spotify > MP3] YouTube video ID obtained: ', videoId)
 
             const usageItem = {
                 type: 'Spotify > mp3 Converter',
