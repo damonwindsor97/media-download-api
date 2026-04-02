@@ -1,3 +1,4 @@
+require('dotenv').config()
 const axios = require('axios')
 const { ytsearch } = require('ruhend-scraper')
 const yts = require( 'yt-search' )
@@ -207,51 +208,72 @@ module.exports = {
         }
     },
 
-    async downloadMp3(req, res, next){
-
+    async downloadMp3(req, res, next) {
         try {
             const token = req.cookies?.anon_token;
-            const user = await AnonUser.findOne({ token })
-            
-            if(user && user.utilityHistory >= 50){
-                return res.status(403).json({ error: 'Usage limit reached, please wait till your user expires'})
+            const user = await AnonUser.findOne({ token });
+
+            if (user && user.utilityHistory >= 50) {
+                return res.status(403).json({ error: 'Usage limit reached, please wait till your user expires' });
             }
 
-            if(!user){
-                return res.status(400).json({ error:'No guest user found, contact admin'})
+            if (!user) {
+                return res.status(400).json({ error: 'No guest user found, contact admin' });
             }
+
             const spotifyUrl = req.body.link;
             console.log('[Spotify > MP3] Link obtained: ', spotifyUrl);
-    
+
             const trackIdMatch = spotifyUrl.match(/track\/([a-zA-Z0-9]{22})/);
-            if(!trackIdMatch){
-                res.status(400).send('Invalid Spotify track URL')
-                console.log('[Spotify > MP3] Invalid Spotify track URL')
-                return
-            };
-    
+            if (!trackIdMatch) {
+                console.log('[Spotify > MP3] Invalid Spotify track URL');
+                return res.status(400).send('Invalid Spotify track URL');
+            }
+
             const trackId = trackIdMatch[1];
             console.log('[Spotify > MP3] Track ID obtained');
-    
+
             console.log('[Spotify > MP3] Searching for Track ID via Spotify');
             const response = await getTrackInfo(trackId);
-            console.log(response)
 
-            const artistName = response.artists[0].name
+            const artistName = response.artists[0].name;
             const trackName = response.name;
+            const fullTrack = `${artistName} - ${trackName}`;
+            console.log('[Spotify > MP3] Full track: ', fullTrack);
 
-            console.log('[Spotify > MP3] Track name obtained: ', trackName)
-            console.log('[Spotify > MP3] Artist name obtained: ', artistName)
-            const fullTrack = `${artistName} - ${trackName}`
-            console.log('[Spotify > MP3] Full track: ', fullTrack)
-
-            console.log('[Spotify > MP3] Searching for track via YouTube')
-            const youtubeData = await yts(fullTrack)
-            console.log('[Spotify > MP3] YouTube search results: ', youtubeData)
-            console.log('[Spotify > MP3] Attempting to grab video ID from YouTube search results')
+            console.log('[Spotify > MP3] Searching for track via YouTube');
+            const youtubeData = await yts(fullTrack);
             const videoId = youtubeData.all[0]?.videoId;
-            console.log('[Spotify > MP3] YouTube video ID obtained: ', videoId)
+            console.log('[Spotify > MP3] YouTube video ID obtained: ', videoId);
 
+            if (!videoId) {
+                return res.status(404).send('Could not find track on YouTube');
+            }
+
+            console.log('[Spotify > MP3] Calling RapidAPI for MP3 link');
+            const rapidApiResponse = await axios.get('https://youtube-mp36.p.rapidapi.com/dl', {
+                params: { id: videoId },
+                headers: {
+                    'x-rapidapi-key': process.env.YOUTUBE_MP3_API_KEY,
+                    'x-rapidapi-host': process.env.YOUTUBE_MP3_API_HOST
+                }
+            });
+
+            const { link: mp3Url } = rapidApiResponse.data;
+            console.log('[Spotify > MP3] MP3 link obtained, fetching and piping file');
+
+            // Fetch the actual MP3 and pipe it back to the client
+            const fileResponse = await axios.get(mp3Url, { responseType: 'stream' });
+
+            const safeTitle = fullTrack.replace(/[^a-z0-9 \-_]/gi, '_'); 
+            res.setHeader('Content-Disposition', `attachment; filename="${safeTitle}.mp3"`);
+            res.setHeader('Content-Type', 'audio/mpeg');
+            // set track name to the x-filename header so the frontend can access it
+            res.setHeader('x-filename', `${safeTitle}.mp3`);
+
+            fileResponse.data.pipe(res);
+
+            // Log usage 
             const usageItem = {
                 type: 'Spotify > mp3 Converter',
                 timestamp: new Date(),
@@ -266,19 +288,15 @@ module.exports = {
                 { token },
                 { $push: { utilityHistory: usageItem } },
                 { new: true, upsert: true }
-            )
-
-            console.log('[Spotify > MP3] YouTube ID found, sending back to user: ', videoId);
-            res.status(200).send(videoId)
+            );
 
         } catch (error) {
-            if (error === 401){
-                getAccessToken(clientId, clientSecret, tokenUrl)
-                return ('/downloadMp3').post(req, res)
-            };
-            console.log('[Spotify > MP3] Error downloading MP3')
-            res.status(500).send('[Spotify > MP3] Failed to download MP3')
+            if (error === 401) {
+                getAccessToken(clientId, clientSecret, tokenUrl);
+                return ('/downloadMp3').post(req, res);
+            }
+            console.log('[Spotify > MP3] Error downloading MP3', error);
+            res.status(500).send('[Spotify > MP3] Failed to download MP3');
         }
-
     }
 }

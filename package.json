@@ -4,6 +4,8 @@
     "@aws-sdk/lib-storage": "^3.808.0",
     "@aws-sdk/s3-request-presigner": "^3.858.0",
     "@aws-sdk/url-parser-node": "^3.1.0",
+    "@distube/ytdl-core": "^4.16.12",
+    "@vreden/youtube_scraper": "^1.2.8",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.7.4",
     "child_process": "^1.0.2",
@@ -36,7 +38,9 @@
     "spotify-web-api-node": "^5.0.2",
     "streamifier": "^0.1.1",
     "tough-cookie": "^5.0.0",
-    "undici": "^6.19.8"
+    "undici": "^6.19.8",
+    "youtube-dl-exec": "^3.1.4",
+    "yt-search": "^2.13.1"
   },
   "name": "media-download-api",
   "description": "An API I've created originally to use for my link utility site",
