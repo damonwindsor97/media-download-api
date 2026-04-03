@@ -14,8 +14,8 @@
 
 | Method  | Endpoint | Description |
 -------------------------|--------------------------|---------------|
-| POST | (xxx_xxx)/youtube/getTitle | Gets title back of the Video  |
-| POST  | (xxx_xxx)/youtube/downloadMp4 | Downloads an Mp4 video at highest quality  |
+| POST | (xxx_xxx)/youtube/getTitle | Unavailable  |
+| POST  | (xxx_xxx)/youtube/downloadMp4 | Unavailable  |
 | POST | (xxx_xxx)/youtube/downloadMp3 | Downloads an Mp3 audio format |
 | POST | (xxx_xxx)/soundcloud/getInfo | Gets all information back of the track |
 | POST | (xxx_xxx)/soundcloud/getTitle | Gets title back of the track |
